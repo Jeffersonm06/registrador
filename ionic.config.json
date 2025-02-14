@@ -1,0 +1,7 @@
+{
+  "name": "fileSystem",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
