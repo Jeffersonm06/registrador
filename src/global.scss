@@ -35,3 +35,27 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/* Ajuste para headers */
+ion-header {
+    padding-top: 10px;
+    padding-top: constant(safe-area-inset-top);
+    padding-top: env(safe-area-inset-top);
+}
+
+/* Ajuste para conteúdo principal */
+ion-content {
+    --ion-safe-area-top: env(safe-area-inset-top);
+    --ion-safe-area-bottom: env(safe-area-inset-bottom);
+}
+
+ion-toolbar {
+    padding-top: env(safe-area-inset-top);
+    min-height: calc(56px + env(safe-area-inset-top));
+    font-size: 20px;
+}
+
+* {
+	font-family: var(--selected-font);
+    font-size: var(--selected-font-size);
+}

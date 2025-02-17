@@ -1,5 +1,5 @@
 {
-  "name": "fileSystem",
+  "name": "FileSystem",
   "integrations": {
     "capacitor": {}
   },

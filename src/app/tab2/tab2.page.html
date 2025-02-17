@@ -1,17 +1,30 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>
-      Tab 2
+      Ajustes
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+<ion-content [fullscreen]="false">
+  <ion-card class="message">
+    <ion-title>
+      Config. de estilo
+    </ion-title>
+  </ion-card>
+  <ion-card class="select-card">
+    <ion-select [(ngModel)]="selectedFont" label="Fontes" aria-label="font" (ionChange)="handleFontChange($event)">
+      @for(font of fonts; track $index){
+      <ion-select-option [style.fontFamily]="font.value" [value]="font.value">{{font.name}}</ion-select-option>
+      }
+    </ion-select>
+  </ion-card>
+  <ion-card class="select-card">
+    <ion-select [(ngModel)]="selectedFont" label="Tamanho da fonte" aria-label="font"
+      (ionChange)="handleFontSizeChange($event)">
+      @for(font of fontSizes; track $index){
+      <ion-select-option [value]="font">{{font}}</ion-select-option>
+      }
+    </ion-select>
+  </ion-card>
 </ion-content>

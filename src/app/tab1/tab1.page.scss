@@ -1,0 +1,132 @@
+#open-modal {
+    position: fixed;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 18px;
+    background: var(--ion-color-primary);
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.message {
+    padding: 10px;
+    text-align: center;
+}
+
+.file {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 20px;
+
+    img {
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+    }
+
+    .icon{
+        font-size: 30px;
+    }
+
+    .file-name {
+        font-size: 16px;
+        display: flex;
+        flex-direction: column;
+
+        p {
+            height: 20px;
+            margin: 0;
+            padding: 0;
+            line-break: anywhere;
+            text-overflow: ellipsis;
+        }
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--ion-color-medium);
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--ion-color-primary);
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-group input[type="file"] {
+    border: none;
+    background: none;
+}
+
+.form-group input[type="file"]::-webkit-file-upload-button {
+    background: var(--ion-color-primary);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.form-group input[type="file"]::-webkit-file-upload-button:hover {
+    background: var(--ion-color-primary-tint);
+}
+
+.view{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    img{
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    video{
+        border-radius: 10px;
+        width: 100%;
+        max-height: 350px;
+        object-fit: cover;
+        object-position: top;
+    }
+
+    p{
+        width: 100%;
+    }
+
+    .box{
+        display: flex;
+        align-items: center;
+    }
+}

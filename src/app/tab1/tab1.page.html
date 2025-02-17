@@ -1,17 +1,141 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>
-      Tab 1
+      Arquivos
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="false">
+  @if(files.length > 0){
+  <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="filterFiles()" debounce="300"
+    placeholder="Pesquisar arquivos..."></ion-searchbar>
+  @for(file of filteredFiles; track $index){
+  <ion-card (click)="setOpen(true, file)" class="file">
+    @if(file.type === 'image'){
+    <img [src]="file.imageUrl" alt="Imagem" style="max-width: 100%; height: auto;" />
+    }
+    @if (file.type === 'video'){
+    <ion-icon class="icon" src="assets/icon/film.svg"></ion-icon>
+    }
+    <div class="file-name">
+      <p>{{ file.title }}</p>
+      @if(file.type === 'image' && file.relatedFile){
+      <p>{{ file.relatedFile.description }}</p>
+      } @else {
+      <p>{{ file.description }}</p>
+      }
+    </div>
+  </ion-card>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+  }
+  }@else {
+  <ion-card class="message">
+    <ion-label>No files found</ion-label>
+  </ion-card>
+  }
+  <ion-action-sheet [isOpen]="isActionSheetOpen" header="Ações" [buttons]="actionSheetButtons"
+    (didDismiss)="setOpen(false, null)"></ion-action-sheet>
+  <button id="open-modal" shape="round">
+    Adicionar arquivo
+    <ion-icon src="assets/icon/add-circle.svg"></ion-icon>
+  </button>
+  <ion-modal trigger="open-modal" (willDismiss)="onWillDismiss($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-button (click)="cancel()">Cancel</ion-button>
+          </ion-buttons>
+          <ion-buttons slot="end">
+            <ion-button (click)="confirm()" [strong]="true">Confirm</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-card>
+          <ion-title class="message">criar arquivo</ion-title>
+        </ion-card>
+        <div class="form-group">
+          <input type="text" placeholder="Nome do aquivo aqui" [(ngModel)]="title">
+        </div>
+        <div class="form-group">
+          <textarea name="" id="" [(ngModel)]="description" placeholder="Conteúdo aqui"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Selecione uma imagem/video (opcional)</label>
+          <input type="file" accept="image/*,video/*" (change)="onImageSelected($event)" #fileInput />
+
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+  <ion-modal [isOpen]="isModalOpen">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>{{ currentFile?.title }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="setOpenModal(false, null)">Fechar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div class="view">
+          @if(currentFile){
+          @if(currentFile.type === 'image'){
+          <img [src]="currentFile.imageUrl" alt="Imagem" style="max-width: 100%; height: auto;" />
+          <div class="box">
+            @if(speaking){
+            <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
+            }
+            <ion-button shape="round" (click)="speak(currentFile.relatedFile?.description!)">
+              @if (speaking) {
+              <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+              Leia pra mim
+              }
+            </ion-button>
+          </div>
+          <p>{{ currentFile.relatedFile?.description }}</p>
+          }
+          @if (currentFile.type === 'video') {
+          <video controls>
+            <source [src]="currentFile.imageUrl" type="video/mp4">
+            Seu navegador não suporta vídeos.
+          </video>
+          <div class="box">
+            @if(speaking){
+            <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
+            }
+            <ion-button shape="round" (click)="speak(currentFile.relatedFile?.description!)">
+              @if (speaking) {
+              <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+              Leia pra mim
+              }
+            </ion-button>
+          </div>
+          <p>{{ currentFile.relatedFile?.description }}</p>
+          }
+          @if(currentFile.type === 'text'){
+          <div class="box">
+            @if(speaking){
+            <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
+            }
+            <ion-button shape="round" (click)="speak(currentFile.description!)">
+              @if (speaking) {
+              <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+              Leia pra mim
+              }
+            </ion-button>
+          </div>
+          <p>{{ currentFile.description }}</p>
+          }
+          }
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>
