@@ -20,6 +20,14 @@ const config: CapacitorConfig = {
     },
     Keyboard: {
       resize: 'body'
+    },
+    CapacitorSQLite: {
+      androidIsEncryption: true,
+      androidBiometric: {
+        biometricAuth: false,
+        biometricTitle: "Biometric login for capacitor sqlite",
+        biometricSubTitle: "Log in using your biometric"
+      },
     }
   },
 };

@@ -1,8 +1,9 @@
 export interface MFile {
+  id: number;
   title: string;
-  description: string;
-  type: 'text' | 'image' | 'video' | 'other';
-  path: string;
-  relatedFile: MFile | null;
-  imageUrl: string | null;
+  content: string;
+  filePath: string;
+  fileBase64: string;
+  type: 'image' | 'video' | 'text';
+  ext: string;
 }

@@ -13,18 +13,14 @@
   @for(file of filteredFiles; track $index){
   <ion-card (click)="setOpen(true, file)" class="file">
     @if(file.type === 'image'){
-    <img [src]="file.imageUrl" alt="Imagem" style="max-width: 100%; height: auto;" />
+    <img [src]="file.fileBase64" alt="Imagem" style="max-width: 100%; height: auto;" />
     }
     @if (file.type === 'video'){
-    <ion-icon class="icon" src="assets/icon/film.svg"></ion-icon>
+    <ion-icon class="icon" name="film"></ion-icon>
     }
     <div class="file-name">
-      <p>{{ file.title }}</p>
-      @if(file.type === 'image' && file.relatedFile){
-      <p>{{ file.relatedFile.description }}</p>
-      } @else {
-      <p>{{ file.description }}</p>
-      }
+      <p>{{ file.title}}</p>
+      <p>{{ file.filePath }}</p>
     </div>
   </ion-card>
 
@@ -38,7 +34,7 @@
     (didDismiss)="setOpen(false, null)"></ion-action-sheet>
   <button id="open-modal" shape="round">
     Adicionar arquivo
-    <ion-icon src="assets/icon/add-circle.svg"></ion-icon>
+    <ion-icon name="add-circle"></ion-icon>
   </button>
   <ion-modal trigger="open-modal" (willDismiss)="onWillDismiss($event)">
     <ng-template>
@@ -60,7 +56,7 @@
           <input type="text" placeholder="Nome do aquivo aqui" [(ngModel)]="title">
         </div>
         <div class="form-group">
-          <textarea name="" id="" [(ngModel)]="description" placeholder="Conteúdo aqui"></textarea>
+          <textarea name="" id="" [(ngModel)]="content" placeholder="Conteúdo aqui"></textarea>
         </div>
         <div class="form-group">
           <label>Selecione uma imagem/video (opcional)</label>
@@ -84,12 +80,12 @@
         <div class="view">
           @if(currentFile){
           @if(currentFile.type === 'image'){
-          <img [src]="currentFile.imageUrl" alt="Imagem" style="max-width: 100%; height: auto;" />
+          <img [src]="currentFile.fileBase64" alt="Imagem" style="max-width: 100%; height: auto;" />
           <div class="box">
             @if(speaking){
             <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
             }
-            <ion-button shape="round" (click)="speak(currentFile.relatedFile?.description!)">
+            <ion-button shape="round" (click)="speak(currentFile.content!)">
               @if (speaking) {
               <ion-spinner name="crescent"></ion-spinner>
               } @else {
@@ -97,18 +93,18 @@
               }
             </ion-button>
           </div>
-          <p>{{ currentFile.relatedFile?.description }}</p>
+          <p>{{ currentFile.content }}</p>
           }
           @if (currentFile.type === 'video') {
           <video controls>
-            <source [src]="currentFile.imageUrl" type="video/mp4">
+            <source [src]="currentFile.fileBase64" type="video/mp4">
             Seu navegador não suporta vídeos.
           </video>
           <div class="box">
             @if(speaking){
             <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
             }
-            <ion-button shape="round" (click)="speak(currentFile.relatedFile?.description!)">
+            <ion-button shape="round" (click)="speak(currentFile.content!)">
               @if (speaking) {
               <ion-spinner name="crescent"></ion-spinner>
               } @else {
@@ -116,14 +112,14 @@
               }
             </ion-button>
           </div>
-          <p>{{ currentFile.relatedFile?.description }}</p>
+          <p>{{ currentFile.content }}</p>
           }
           @if(currentFile.type === 'text'){
           <div class="box">
             @if(speaking){
             <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
             }
-            <ion-button shape="round" (click)="speak(currentFile.description!)">
+            <ion-button shape="round" (click)="speak(currentFile.content!)">
               @if (speaking) {
               <ion-spinner name="crescent"></ion-spinner>
               } @else {
@@ -131,11 +127,14 @@
               }
             </ion-button>
           </div>
-          <p>{{ currentFile.description }}</p>
+          <p>{{ currentFile.content }}</p>
           }
           }
         </div>
       </ion-content>
     </ng-template>
   </ion-modal>
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 </ion-content>

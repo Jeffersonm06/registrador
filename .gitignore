@@ -29,6 +29,9 @@ log.txt
 /out-tsc
 /bazel-out
 
+
+/src/app/data/*
+
 # Node
 /node_modules
 npm-debug.log

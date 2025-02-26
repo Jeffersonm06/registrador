@@ -16,8 +16,10 @@ export class AppComponent implements OnInit {
     private st: StyleService
   ) { }
 
-  ngOnInit(): void {
-    this.fs.createAppFolder();
-    this.st.loadStyle()
+  async ngOnInit(){
+    await this.fs.checkPermissions();
+    await this.fs.initDatabase();
+    await this.fs.createAppFolder();
+    await this.st.loadStyle();
   }
 }

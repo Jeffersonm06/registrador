@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
+import { AlertController } from '@ionic/angular/standalone';
+import { MFile } from '../interfaces/m-file';
+
+import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
+
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-import { MFile } from '../interfaces/m-file';
-import {
-  AlertController,
-} from '@ionic/angular/standalone';
 
 const appFolder = 'FileSystem';
 
@@ -12,10 +13,13 @@ const appFolder = 'FileSystem';
   providedIn: 'root'
 })
 export class FilesystemService {
+  // Conexão com o banco de dados SQLite
+  private db!: SQLiteDBConnection;
 
   constructor(
-    private alertController: AlertController,
-  ) { }
+    private alertController: AlertController
+  ) {
+  }
 
   async checkPermissions(): Promise<boolean> {
     const permStatus = await Filesystem.checkPermissions();
@@ -37,35 +41,120 @@ export class FilesystemService {
     try {
       await Filesystem.mkdir({
         path: appFolder,
-        directory: Directory.ExternalStorage,
-        recursive: true // Cria a pasta caso não exista
+        directory: Directory.Data,
+        recursive: true
       });
     } catch (error: any) {
-      if (error.message !== 'Current directory does already exist.' && error.message !== 'Directory exists') {
-        alert('Erro ao criar pasta do aplicativo: ' + error);
-      }
+      return;
     }
   }
 
-
-  async writeTextFile(filePath: string, data: string): Promise<void> {
-    const fullPath = `${appFolder}/${filePath}.txt`;
-    const hasPermission = await this.checkPermissions();
-
-    if (!hasPermission) {
-      alert("Permissão negada para acessar o armazenamento.");
-      return;
-    }
-
+  async initDatabase(): Promise<void> {
     try {
-      await Filesystem.writeFile({
-        path: fullPath,
-        data: data,
-        directory: Directory.ExternalStorage,
-        encoding: Encoding.UTF8,
+      const sqlite: SQLiteConnection = new SQLiteConnection(CapacitorSQLite);
+      this.db = await sqlite.createConnection('__FS', false, 'no-encryption', 1, false);
+      await this.db.open();
+      const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS files (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT,
+          content TEXT,
+          filePath TEXT,
+          ext TEXT,
+          type TEXT
+        );
+      `;
+      await this.db.execute(createTableQuery);
+      this.presentAlert({
+        header: 'Banco de Dados',
+        message: 'Banco de dados inicializado com sucesso!',
+        buttons: ['ok']
       });
     } catch (error) {
-      alert('Erro ao escrever arquivo de texto: ' + error);
+      this.presentAlert({
+        header: 'Banco de Dados',
+        message: 'Erro ao inicializar o banco de dados: ' + error,
+        buttons: ['ok']
+      });
+    }
+  }
+
+  async saveRecord(data: {
+    title: string;
+    content?: string;
+    file?: File;
+    filePath?: string;
+  }): Promise<MFile> {
+    if (!this.db) throw new Error('Banco não inicializado');
+    if (!data.title) throw new Error('Título é obrigatório');
+
+    let filePath = '';
+    let type: 'text' | 'image' | 'video' = 'text';
+    let ext = '';
+    let content = data.content || '';
+
+    try {
+      if (data.file && data.filePath) {
+        await this.createAppFolder();
+
+        const permStatus = await this.checkPermissions();
+        if (!permStatus) {
+          throw new Error('Permissão de armazenamento negada');
+        }
+
+        ext = data.file.name.split('.').pop()?.toLowerCase() || '';
+        const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'];
+        const videoExtensions = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+
+        if (imageExtensions.includes(ext)) {
+          type = 'image';
+        } else if (videoExtensions.includes(ext)) {
+          type = 'video';
+        } else {
+          throw new Error('Tipo de arquivo não suportado');
+        }
+
+        const uniqueFilename = `${Date.now()}_${data.filePath}`;
+
+        const base64Data = await this.blobToBase64(data.file);
+        await Filesystem.writeFile({
+          path: `${appFolder}/${uniqueFilename}`,
+          data: base64Data,
+          directory: Directory.Data,
+        });
+
+        filePath = uniqueFilename;
+      }
+
+      if (!data.content && !data.file) {
+        throw new Error('Dados insuficientes para o registro');
+      }
+
+      const query = `INSERT INTO files (title, content, filePath, type, ext) VALUES (?, ?, ?, ?, ?)`;
+      const result = await this.db.run(query, [
+        data.title,
+        content,
+        filePath,
+        type,
+        ext
+      ]);
+
+      if (!result.changes?.lastId) {
+        throw new Error('Falha ao inserir registro');
+      }
+
+      return {
+        id: result.changes.lastId,
+        title: data.title,
+        content: content,
+        filePath: filePath,
+        fileBase64: '',
+        type: type,
+        ext: ext
+      };
+
+    } catch (error) {
+      console.error('Erro no saveRecord:', error);
       throw error;
     }
   }
@@ -84,7 +173,7 @@ export class FilesystemService {
       await Filesystem.writeFile({
         path: fullPath,
         data: base64Data,
-        directory: Directory.ExternalStorage,
+        directory: Directory.Data,
       });
     } catch (error) {
       alert('Erro ao salvar arquivo: ' + error);
@@ -108,19 +197,66 @@ export class FilesystemService {
     });
   }
 
-  async readFile(filePath: string): Promise<string | null> {
-    const fullPath = `${appFolder}/${filePath}`;
-    try {
-      const contents = await Filesystem.readFile({
-        path: fullPath,
-        directory: Directory.ExternalStorage,
-        encoding: Encoding.UTF8,
-      });
-      return contents.data as string;
-    } catch (error) {
-      alert('Erro ao ler arquivo: ' + error);
-      return null;
+  async getAllFileRecords(): Promise<MFile[]> {
+    if (!this.db) {
+      console.error('Banco não inicializado.');
+      return [];
     }
+    try {
+      const query = `SELECT * FROM files`;
+      const result = await this.db.query(query);
+      const rows = result.values ?? [];
+      const files: MFile[] = await Promise.all(
+        rows.map(async (row: any) => {
+          let imgSrc = '';
+          if (row.filePath) {
+            const result = await this.readBinaryFile(row.filePath);
+            imgSrc = result || '';
+          }
+
+          return {
+            id: row.id,
+            title: row.title,
+            content: row.content,
+            filePath: row.filePath,
+            fileBase64: imgSrc,
+            type: row.type,
+            ext: row.ext,
+          };
+        })
+      );
+      return files;
+    } catch (error) {
+      console.error('Erro ao recuperar registros:', error);
+      return [];
+    }
+  }
+
+  async deleteFileRecord(id: number): Promise<void> {
+    if (!this.db) {
+      alert('Banco não inicializado.');
+      return;
+    }
+    try {
+      const query = `DELETE FROM files WHERE id = ?;`;
+      await this.db.run(query, [id]);
+      console.log('Registro excluído com sucesso.');
+    } catch (error) {
+      alert('Erro ao excluir registro: ' + error);
+    }
+  }
+
+  /***Fim dos Métodos de Banco de Dados ***/
+
+  private getMimeType(filename: string): string {
+    const extension = filename.split('.').pop()?.toLowerCase() || '';
+    const mimeTypes: { [key: string]: string } = {
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'mp4': 'video/mp4',
+      // Adicione outros tipos necessários
+    };
+    return mimeTypes[extension] || 'application/octet-stream';
   }
 
   async readBinaryFile(filePath: string): Promise<string | null> {
@@ -128,162 +264,64 @@ export class FilesystemService {
     try {
       const contents = await Filesystem.readFile({
         path: fullPath,
-        directory: Directory.ExternalStorage,
+        directory: Directory.Data,
       });
 
       const extension = filePath.split('.').pop()?.toLowerCase() || '';
       return `data:${this.getMimeType(extension)};base64,${contents.data}`;
     } catch (error) {
-      return null;
-    }
-  }
-
-  async listFiles(): Promise<MFile[]> {
-    try {
-      const result = await Filesystem.readdir({
-        directory: Directory.ExternalStorage,
-        path: appFolder,
-      });
-
-      const files = await Promise.all(
-        result.files.map(async (file) => {
-          const fileType = this.getFileType(file.name);
-          const title = file.name.split('.').slice(0, -1).join('.'); // Remove a extensão
-
-          return {
-            title: title,
-            description: fileType === 'text'
-              ? await this.readFile(file.name) || 'Vazio'
-              : this.getFileDescription(fileType),
-            type: fileType,
-            path: file.name,
-            relatedFile: null,
-            // Para imagens e vídeos, obtemos a URL em base64
-            imageUrl: (fileType === 'image' || fileType === 'video')
-              ? await this.readBinaryFile(file.name)
-              : null
-          };
-        })
-      );
-
-      // Agrupa arquivos relacionados (por exemplo, texto e imagem vinculados)
-      const groupedFiles = this.groupRelatedFiles(files);
-      return groupedFiles;
-    } catch (error) {
-      alert('Erro ao listar arquivos: ' + error);
-      return [];
-    }
-  }
-
-  // Função para agrupar arquivos relacionados
-  private groupRelatedFiles(files: MFile[]): MFile[] {
-    const fileMap = new Map<string, MFile>();
-
-    files.forEach((file) => {
-      if (!fileMap.has(file.title)) {
-        fileMap.set(file.title, file);
-      } else {
-        const existingFile = fileMap.get(file.title)!;
-
-        if (file.type === 'text' && (existingFile.type === 'image' || existingFile.type === 'video')) {
-          existingFile.relatedFile = file;
-        } else if ((file.type === 'image' || file.type === 'video') && existingFile.type === 'text') {
-          file.relatedFile = existingFile;
-          fileMap.set(file.title, file);
-        }
-      }
-    });
-
-    return Array.from(fileMap.values());
-  }
-
-
-  private removeExtension(filename: string): string {
-    return filename.split('.').slice(0, -1).join('.');
-  }
-
-  getFileType(filename: string): 'text' | 'image' | 'video' | 'other' {
-    const extension = filename.split('.').pop()?.toLowerCase() ?? '';
-    if (['txt', 'csv', 'json', 'xml'].includes(extension)) return 'text';
-    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension)) return 'image';
-    if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(extension)) return 'video';
-    return 'other';
-  }
-
-
-  private getFileDescription(fileType: string): string {
-    switch (fileType) {
-      case 'image':
-        return 'Arquivo de imagem';
-      case 'video':
-        return 'Arquivo de vídeo';
-      default:
-        return 'Arquivo não suportado';
-    }
-  }
-
-  private getMimeType(extension: string): string {
-    switch (extension) {
-      case 'png': return 'image/png';
-      case 'jpg':
-      case 'jpeg': return 'image/jpeg';
-      case 'gif': return 'image/gif';
-      case 'webp': return 'image/webp';
-      case 'txt': return 'text/plain';
-      case 'csv': return 'text/csv';
-      case 'json': return 'application/json';
-      case 'xml': return 'application/xml';
-      case 'mp4': return 'video/mp4';
-      case 'mov': return 'video/quicktime';
-      case 'avi': return 'video/x-msvideo';
-      case 'webm': return 'video/webm';
-      default: return 'application/octet-stream';
-    }
-  }
-
-  async deleteFile(filePath: string) {
-    const fullPath = `${appFolder}/${filePath}`;
-
-    await Filesystem.deleteFile({
-      path: fullPath,
-      directory: Directory.ExternalStorage,
-    });
-  }
-
-  async shareText(file: MFile) {
-    const fullPath = `${appFolder}/${file.path}`;
-    
-    try {
-      await Share.share({
-        title: file.title,
-        text: file.description,
-        dialogTitle: 'Compartilhar com',
-      });
-      console.log('chama')
-    } catch (error) {
-      this.presentAlert({
-        header: 'Erro',
-        message: `${error}`,
-        buttons: ['ok']
-      })
-      throw error
+      return '';
     }
   }
 
   async shareFile(file: MFile) {
-    const fullPath = `${appFolder}/${file.path}`;
+    const fullPath = `${appFolder}/${file.filePath}`;
     try {
-      const fileUri = await Filesystem.getUri({
+      const stats = await Filesystem.stat({
         path: fullPath,
+        directory: Directory.Data
+      });
+      console.log('Estatísticas do arquivo:', stats);
+
+      const PFile = await Filesystem.getUri({
+        path: fullPath,
+        directory: Directory.Data
+      });
+      console.log('URI obtido:', PFile.uri);
+
+      const fileData = await Filesystem.readFile({
+        path: fullPath,
+        directory: Directory.Data
+      });
+
+      const tempFileName = `share_${Date.now()}_${file.filePath}.${file.ext}`;
+
+      await Filesystem.writeFile({
+        path: tempFileName,
+        data: fileData.data,
+        directory: Directory.ExternalStorage,
+        recursive: true
+      });
+
+      const tempUri = await Filesystem.getUri({
+        path: tempFileName,
         directory: Directory.ExternalStorage
       });
+      this.presentAlert({
+        header: 'Uri do arquivo',
+        message: tempUri.uri,
+        buttons: ['OK']
+      })
 
       await Share.share({
         title: file.title,
-        files: [fileUri.uri],
-        text: file.relatedFile?.description || '',
+        files: [`${tempUri.uri}`],
+        text: file.content || '',
         dialogTitle: 'Compartilhar com',
       });
+
+      this.cleanupTempFile(tempUri.uri);
+
     } catch (error) {
       this.presentAlert({
         header: 'Erro',
@@ -294,16 +332,25 @@ export class FilesystemService {
     }
   }
 
-  async presentAlert(
-    alertContent: {
-      header: string,
-      subHeader?: string,
-      message: string,
-      buttons: string[],
-    }
-  ) {
-    const alert = await this.alertController.create(alertContent);
 
+  private async cleanupTempFile(path: string) {
+    try {
+      await Filesystem.deleteFile({
+        path,
+        directory: Directory.ExternalStorage
+      });
+    } catch (error) {
+      this.presentAlert({
+        header: 'Erro',
+        message: `Erro na limpeza: ${error}`,
+        buttons: ['OK']
+      });
+    }
+  }
+
+  /*** Métodos de UI (Alertas) ***/
+  async presentAlert(alertContent: { header: string, subHeader?: string, message: string, buttons: string[] }) {
+    const alert = await this.alertController.create(alertContent);
     await alert.present();
   }
 }
