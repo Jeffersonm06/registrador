@@ -27,4 +27,48 @@
       }
     </ion-select>
   </ion-card>
+  <ion-card class="toggle-card">
+    <ion-toggle justify="space-between" [(ngModel)]="securityMode" (ionChange)="onSecurityToggleChange($event)">Ativar
+      modo de segurança</ion-toggle>
+  </ion-card>
+  @if (securityMode){
+  <ion-card class="message">
+    <ion-title>
+      Modo de segurança ativado
+    </ion-title>
+  </ion-card>
+  <ion-card class="toggle-card">
+    <ion-toggle justify="space-between" [(ngModel)]="passwordActive"
+      (ionChange)="onPasswordToggleChange($event)">Definir senha</ion-toggle>
+  </ion-card>
+  @if (passwordActive){
+  <ion-card class="message">
+    <input type="password" [(ngModel)]="password" (ionInput)="savePreferences()"
+      placeholder="Defina uma senha"><button (click)="savePreferences()">Confirmar</button>
+  </ion-card>
+  }
+  <ion-card class="toggle-card">
+    <ion-toggle justify="space-between" [(ngModel)]="attemptLimit"
+      (ionChange)="onAttemptLimitToggleChange($event)">Definir limite de tentativas</ion-toggle>
+  </ion-card>
+  @if (attemptLimit) {
+  <ion-card class="message">
+    <input type="number" [(ngModel)]="attemptOfNumber" placeholder="Defina o limite de tentativas"><button
+      (click)="savePreferences()">Confirmar</button>
+  </ion-card>
+  }
+  <ion-card class="toggle-card">
+    <ion-toggle justify="space-between" [(ngModel)]="deletePeriodically"
+      (ionChange)="onDeletePeriodToggleChange($event)">Apagar arquivos em períodos</ion-toggle>
+  </ion-card>
+  @if (deletePeriodically) {
+  <ion-card class="message">
+    <ion-select [(ngModel)]="deletePeriod" label="Período de apagar">
+      @for(period of deletePeriodOptions; track $index){
+      <ion-select-option [value]="period.value">{{period.label}}</ion-select-option>
+      }
+    </ion-select>
+  </ion-card>
+  }
+  }
 </ion-content>

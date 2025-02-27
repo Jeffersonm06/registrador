@@ -21,6 +21,7 @@ export class PreferencesService {
           value: item.value
         })
       }
+      console.log(group)
     } catch (error: any) {
       this.presentAlertError(error);
       throw error
@@ -34,6 +35,7 @@ export class PreferencesService {
         const { value } = await Preferences.get({ key });
         result.push(value);
       }
+      console.log(result)
       return result
     } catch (error) {
       this.presentAlertError(error);

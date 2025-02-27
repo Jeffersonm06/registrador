@@ -7,6 +7,13 @@
 </ion-header>
 
 <ion-content [fullscreen]="false">
+  <!-- <ion-card class="file">
+    <img src="assets/image.png" alt="Imagem" style="max-width: 100%; height: auto;" />
+    <div class="file-name">
+      <p>Arquivo</p>
+      <p>Arquivo de exemplo</p>
+    </div>
+  </ion-card> -->
   @if(files.length > 0){
   <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="filterFiles()" debounce="300"
     placeholder="Pesquisar arquivos..."></ion-searchbar>
@@ -20,7 +27,7 @@
     }
     <div class="file-name">
       <p>{{ file.title}}</p>
-      <p>{{ file.filePath }}</p>
+      <p>{{ file.content }}</p>
     </div>
   </ion-card>
 

@@ -3,12 +3,47 @@
     text-align: center;
 }
 
-.select-card{
+.select-card {
 
-    ion-select{
+    ion-select {
         padding: 5px 20px;
         font-size: 18px;
         display: flex;
         justify-content: space-between;
     }
+}
+
+.toggle-card {
+    font-size: 18px;
+    padding: 15px 20px;
+}
+
+.message input {
+    width: 65%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border 0.2s ease-in-out;
+}
+
+.message input:focus {
+    border-color: var(--ion-color-primary);
+}
+
+.message button {
+    background: var(--ion-color-primary);
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s ease-in-out;
+    margin: 0 5px;
+}
+
+.message button:hover {
+    background: var(--ion-color-secondary);
 }
