@@ -65,11 +65,6 @@ export class FilesystemService {
         );
       `;
       await this.db.execute(createTableQuery);
-      this.presentAlert({
-        header: 'Banco de Dados',
-        message: 'Banco de dados inicializado com sucesso!',
-        buttons: ['ok']
-      });
     } catch (error) {
       this.presentAlert({
         header: 'Banco de Dados',

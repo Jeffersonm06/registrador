@@ -35,7 +35,7 @@ export class AppComponent implements OnInit {
     await this.st.loadStyle();
     await this.loadPreferences();
 
-    if(this.passwordActive && this.password.length > 0){
+    if(this.passwordActive && this.password.length > 0 && this.securityMode){
       this.router.navigateByUrl('/login')
     }
   }
