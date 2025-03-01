@@ -1,13 +1,14 @@
 <ion-content [fullscreen]="true" color="primary">
-    <main>
-      <div class="ipt">
-        <input type="password" [(ngModel)]="input" placeholder="Digite sua senha">
-        <button (click)="login()">Entrar</button>
-        @if (currentAttempt > 0 && currentAttempt <= attemptOfNumber){
-          <p> Tentativas: {{ currentAttempt }}</p>
+  <main>
+    <div class="ipt">
+      <input type="password" [(ngModel)]="input" placeholder="Digite sua senha">
+      <button (click)="login()">Entrar</button>
+      @if(attemptLimit){
+      @if (currentAttempt > 0 && currentAttempt <= attemptOfNumber){ <p> Tentativas: {{ currentAttempt }}</p>
         }@else if(currentAttempt > attemptOfNumber){
-          <p>Você excedeu o número de tentativas permitidas!</p>
-         }
-      </div>
-    </main>
+        <p>Você excedeu o número de tentativas permitidas!</p>
+        }
+        }
+    </div>
+  </main>
 </ion-content>

@@ -38,7 +38,8 @@ export class Tab3Page implements OnInit {
     email: '',
     phone: '',
     description: '',
-    file: null
+    file: null,
+    type: 'comum'
   };
   isEditing = false; // Estado de edição
   originalPerson: People | null = null; // Cópia da pessoa original para cancelar edições
@@ -202,7 +203,8 @@ export class Tab3Page implements OnInit {
       email: '',
       phone: '',
       description: '',
-      file: null
+      file: null,
+      type: ''
     };
     this.modal.dismiss(null, 'cancel');
   }
@@ -234,12 +236,7 @@ export class Tab3Page implements OnInit {
         const ext = this.selectedImage.name.split('.').pop()?.toLowerCase() || '';
         const uniqueFilename = `people_${uniqueSuffix}.${ext}`;
 
-        const base64Data = await this.fsService.blobToBase64(this.selectedImage);
-        await Filesystem.writeFile({
-          path: `FileSystem/${uniqueFilename}`,
-          data: base64Data,
-          directory: Directory.Data,
-        });
+        this.fsService.createFile(uniqueFilename, this.selectedImage)
 
         // Atualiza o filePath e a extensão
         this.currentPerson.filePath = uniqueFilename;

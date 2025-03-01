@@ -6,16 +6,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="false">
-  <!-- Card de exemplo -->
-  <!-- <ion-card class="file">
-    <img src="assets/image.png" alt="Imagem" style="max-width: 100%; height: auto;" />
-    <div class="file-name">
-      <p>Exemplo</p>
-      <p>Pessoa de exemplo</p>
-    </div>
-  </ion-card> -->
-
+<ion-content [fullscreen]="true">
   @if(peoples.length > 0){
   <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="filterPeoples()" debounce="300"
     placeholder="Pesquisar pessoas..."></ion-searchbar>
@@ -59,7 +50,7 @@
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content class="ion-padding">
+      <ion-content>
         <ion-card>
           <ion-title class="message">Cadastrar Pessoa</ion-title>
         </ion-card>
@@ -74,6 +65,12 @@
         </div>
         <div class="form-group">
           <textarea placeholder="Descrição" [(ngModel)]="newPerson.description"></textarea>
+        </div>
+        <div class="form-group">
+          <select name="type" id="type" [(ngModel)]="newPerson.type">
+            <option value="comum" selected>Pessoa comum</option>
+            <option value="cliente">Cliente</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Selecione uma foto (opcional)</label>
@@ -104,7 +101,6 @@
             </div>
             }
 
-            <!-- Formulário de edição -->
             <div class="form-container">
               <div class="form-group">
                 <label>Nome</label>
@@ -129,7 +125,24 @@
                   rows="4"></textarea>
               </div>
               }
-
+              @if(currentPerson.type || isEditing){
+              <div class="form-group">
+                <label>Tipo</label>
+                <select [(ngModel)]="currentPerson.type" [disabled]="!isEditing" class="form-select">
+                  <option value="comum" selected>Pessoa comum</option>
+                  <option value="cliente">Cliente</option>
+                </select>
+              </div>
+              }
+              <div class="form-group">
+                <label for="">datas</label>
+                <ion-card>
+                  {{currentPerson.created_at}}
+                </ion-card>
+                <ion-card>
+                  {{currentPerson.updated_at}}
+                </ion-card>
+              </div>
               @if(isEditing) {
               <div class="form-group label-image">
                 <label class="file-upload">
@@ -143,7 +156,6 @@
               }
             </div>
 
-            <!-- Botões de ação -->
             <div class="action-buttons">
               @if(!isEditing) {
               <button class="btn edit-btn" (click)="startEditing()">
@@ -168,7 +180,6 @@
     </ng-template>
   </ion-modal>
 
-  <!-- Atualizar lista -->
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>

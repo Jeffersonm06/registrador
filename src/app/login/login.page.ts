@@ -22,6 +22,7 @@ export class LoginPage implements OnInit {
   input: string = '';
   attemptOfNumber: number = 0;
   currentAttempt: number = 0;
+  attemptLimit:boolean = false;
 
   constructor(
     private pf: PreferencesService,
@@ -37,15 +38,18 @@ export class LoginPage implements OnInit {
 
   async loadPassword() {
     const preferences = await this.pf.get([
-      'password'
+      'password',
+      'attemptLimit',
+      'attemptOfNumber'
     ]);
 
     this.password = preferences[0] || '';
-    this.attemptOfNumber = preferences[1] ? Number(preferences[4]) : 3;
+    this.attemptLimit = preferences[1] === 'true' || false;
+    this.attemptOfNumber = preferences[2] ? Number(preferences[4]) : 3;
   }
 
   login() {
-    if (this.currentAttempt <= this.attemptOfNumber) {
+    if (this.currentAttempt <= this.attemptOfNumber || !this.attemptLimit) {
       if (this.input === this.password) {
         this.router.navigateByUrl('/');
       } else {

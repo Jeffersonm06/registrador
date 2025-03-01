@@ -62,8 +62,19 @@ export class FilesystemService {
           content TEXT,
           filePath TEXT,
           ext TEXT,
-          type TEXT
-        );
+          typeFile TEXT,
+          category TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+        CREATE TRIGGER IF NOT EXISTS update_files_timestamp
+        AFTER UPDATE ON files
+        FOR EACH ROW
+        BEGIN
+          UPDATE files SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+        END;
+
 
         CREATE TABLE IF NOT EXISTS peoples (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,8 +83,19 @@ export class FilesystemService {
           phone TEXT,
           filePath TEXT,
           ext TEXT,
-          description TEXT
+          description TEXT,
+          type TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TRIGGER IF NOT EXISTS update_peoples_timestamp
+        AFTER UPDATE ON peoples
+        FOR EACH ROW
+        BEGIN
+          UPDATE peoples SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+        END;
+
       `;
 
       await this.db.execute(createTableQuery);
@@ -86,17 +108,28 @@ export class FilesystemService {
     }
   }
 
+  async createFile(filePath: string, file: File) {
+
+    const base64Data = await this.blobToBase64(file);
+    await Filesystem.writeFile({
+      path: `${appFolder}/${filePath}`,
+      data: base64Data,
+      directory: Directory.Data,
+    });
+  }
+
   async saveRecord(data: {
     title: string;
     content?: string;
     file?: File;
     filePath?: string;
+    category: string;
   }): Promise<MFile> {
     if (!this.db) throw new Error('Banco não inicializado');
     if (!data.title) throw new Error('Título é obrigatório');
 
     let filePath = '';
-    let type: 'text' | 'image' | 'video' = 'text';
+    let typeFile: 'text' | 'image' | 'video' = 'text';
     let ext = '';
     let content = data.content || '';
 
@@ -114,21 +147,16 @@ export class FilesystemService {
         const videoExtensions = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
 
         if (imageExtensions.includes(ext)) {
-          type = 'image';
+          typeFile = 'image';
         } else if (videoExtensions.includes(ext)) {
-          type = 'video';
+          typeFile = 'video';
         } else {
           throw new Error('Tipo de arquivo não suportado');
         }
 
         const uniqueFilename = `${Date.now()}_${data.filePath}`;
 
-        const base64Data = await this.blobToBase64(data.file);
-        await Filesystem.writeFile({
-          path: `${appFolder}/${uniqueFilename}`,
-          data: base64Data,
-          directory: Directory.Data,
-        });
+        await this.createFile(uniqueFilename, data.file)
 
         filePath = uniqueFilename;
       }
@@ -137,12 +165,13 @@ export class FilesystemService {
         throw new Error('Dados insuficientes para o registro');
       }
 
-      const query = `INSERT INTO files (title, content, filePath, type, ext) VALUES (?, ?, ?, ?, ?)`;
+      const query = `INSERT INTO files (title, content, filePath, typeFile, category, ext) VALUES (?, ?, ?, ?, ?, ?)`;
       const result = await this.db.run(query, [
         data.title,
         content,
         filePath,
-        type,
+        typeFile,
+        data.category,
         ext
       ]);
 
@@ -156,8 +185,11 @@ export class FilesystemService {
         content: content,
         filePath: filePath,
         fileBase64: '',
-        type: type,
-        ext: ext
+        typeFile: typeFile,
+        category: data.category,
+        ext: ext,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
     } catch (error) {
@@ -172,6 +204,7 @@ export class FilesystemService {
     phone?: string;
     description?: string;
     file?: File;
+    type: string;
   }): Promise<any> {
     if (!this.db) throw new Error('Banco não inicializado');
     if (!data.name) throw new Error('Nome é obrigatório');
@@ -193,20 +226,15 @@ export class FilesystemService {
         ext = originalName.split('.').pop()?.toLowerCase() || '';
         const uniqueFilename = `people_${uniqueSuffix}.${ext}`;
 
-        const base64Data = await this.blobToBase64(data.file);
-        await Filesystem.writeFile({
-          path: `${appFolder}/${uniqueFilename}`,
-          data: base64Data,
-          directory: Directory.Data,
-        });
+        await this.createFile(uniqueFilename, data.file)
 
         filePath = uniqueFilename;
       }
 
       const query = `
         INSERT INTO peoples 
-          (name, email, phone, filePath, ext, description) 
-        VALUES (?, ?, ?, ?, ?, ?)
+          (name, email, phone, filePath, ext, description, type) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
 
       const result = await this.db.run(query, [
@@ -215,7 +243,8 @@ export class FilesystemService {
         data.phone || null,
         filePath || null,
         ext || null,
-        data.description || null
+        data.description || null,
+        data.type || null,
       ]);
 
       if (!result.changes?.lastId) {
@@ -229,33 +258,13 @@ export class FilesystemService {
         phone: data.phone,
         description: data.description,
         filePath: filePath,
-        ext: ext
+        ext: ext,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
     } catch (error) {
       console.error('Erro no savePeople:', error);
-      throw error;
-    }
-  }
-
-  async writeBinaryFile(filePath: string, data: File): Promise<void> {
-    const fullPath = `${appFolder}/${filePath}`;
-    const hasPermission = await this.checkPermissions();
-
-    if (!hasPermission) {
-      alert("Permissão negada para acessar o armazenamento.");
-      return;
-    }
-
-    try {
-      const base64Data = await this.blobToBase64(data);
-      await Filesystem.writeFile({
-        path: fullPath,
-        data: base64Data,
-        directory: Directory.Data,
-      });
-    } catch (error) {
-      alert('Erro ao salvar arquivo: ' + error);
       throw error;
     }
   }
@@ -286,8 +295,11 @@ export class FilesystemService {
           content: 'ababababa',
           filePath: 'assets/image.png',
           fileBase64: 'assets/image.png',
-          type: 'image',
-          ext: 'png'
+          typeFile: 'image',
+          category: '',
+          ext: 'png',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }
       ];
     }
@@ -309,8 +321,11 @@ export class FilesystemService {
             content: row.content,
             filePath: row.filePath,
             fileBase64: imgSrc,
-            type: row.type,
+            typeFile: row.typeFile,
+            category: row.category,
             ext: row.ext,
+            created_at: row.created_at,
+            updated_at: row.updated_at
           };
         })
       );
@@ -331,7 +346,9 @@ export class FilesystemService {
           email: 'w@getMaxListeners.com',
           filePath: 'assets/image.png',
           fileBase64: 'assets/image.png',
-          ext: 'png'
+          ext: 'png',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       ];
     }
@@ -356,7 +373,9 @@ export class FilesystemService {
             description: row.description,
             filePath: row.filePath,
             fileBase64: fileBase64,
-            ext: row.ext
+            ext: row.ext,
+            created_at: row.created_at,
+            updated_at: row.updated_at
           };
         })
       );
@@ -388,14 +407,12 @@ export class FilesystemService {
     }
 
     try {
-      // Primeiro, busca o registro para obter o filePath (se houver)
       const query = `SELECT filePath FROM peoples WHERE id = ?`;
       const result = await this.db.query(query, [id]);
 
       if (result.values && result.values.length > 0) {
         const filePath = result.values[0].filePath;
 
-        // Se houver um arquivo associado, exclui do sistema de arquivos
         if (filePath) {
           await Filesystem.deleteFile({
             path: `${appFolder}/${filePath}`,
@@ -404,14 +421,13 @@ export class FilesystemService {
         }
       }
 
-      // Exclui o registro do banco de dados
       const deleteQuery = `DELETE FROM peoples WHERE id = ?`;
       await this.db.run(deleteQuery, [id]);
 
       console.log('Pessoa excluída com sucesso.');
     } catch (error) {
       console.error('Erro ao excluir pessoa:', error);
-      throw error; // Propaga o erro para ser tratado no componente
+      throw error;
     }
   }
 
@@ -439,9 +455,9 @@ export class FilesystemService {
     try {
       await this.db.run(
         `UPDATE files 
-         SET title = ?, content = ?, filePath = ?, ext = ?, type = ? 
+         SET title = ?, content = ?, filePath = ?, ext = ?, typeFile = ?, category = ? 
          WHERE id = ?;`,
-        [file.title, file.content, file.filePath, file.ext, file.type, file.id]
+        [file.title, file.content, file.filePath, file.ext, file.typeFile, file.category, file.id]
       );
 
       console.log('Arquivo atualizado com sucesso.');
@@ -460,7 +476,6 @@ export class FilesystemService {
       'png': 'image/png',
       'jpg': 'image/jpeg',
       'mp4': 'video/mp4',
-      // Adicione outros tipos necessários
     };
     return mimeTypes[extension] || 'application/octet-stream';
   }

@@ -7,23 +7,15 @@
 </ion-header>
 
 <ion-content [fullscreen]="false">
-  <!-- card de exemplo -->
-  <!-- <ion-card class="file">
-    <img src="assets/image.png" alt="Imagem" style="max-width: 100%; height: auto;" />
-    <div class="file-name">
-      <p>Arquivo</p>
-      <p>Arquivo de exemplo</p>
-    </div>
-  </ion-card> -->
   @if(files.length > 0){
   <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="filterFiles()" debounce="300"
     placeholder="Pesquisar arquivos..."></ion-searchbar>
   @for(file of filteredFiles; track $index){
   <ion-card (click)="setOpen(true, file)" class="file">
-    @if(file.type === 'image'){
-    <img [src]="file.fileBase64" alt="Imagem" style="max-width: 100%; height: auto;" />
+    @if(file.typeFile === 'image'){
+    <img [src]="file.fileBase64" alt="Imagem" />
     }
-    @if (file.type === 'video'){
+    @if (file.typeFile === 'video'){
     <ion-icon class="icon" name="film"></ion-icon>
     }
     <div class="file-name">
@@ -64,12 +56,18 @@
           <input type="text" placeholder="Nome do arquivo aqui" [(ngModel)]="title">
         </div>
         <div class="form-group">
-          <textarea name="" id="" [(ngModel)]="content" placeholder="Conteúdo aqui"></textarea>
+          <textarea name="content" id="" [(ngModel)]="content" placeholder="Conteúdo aqui"></textarea>
+        </div>
+        <div class="form-group">
+          <select name="category" [(ngModel)]="category">
+            <option value="registro" selected>Registro</option>
+            <option value="servico">Serviço</option>
+            <option value="outro">Outro</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Selecione uma imagem/video (opcional)</label>
           <input type="file" accept="image/*,video/*" (change)="onImageSelected($event)" #fileInput />
-
         </div>
       </ion-content>
     </ng-template>
@@ -88,12 +86,11 @@
         <div class="view">
           @if(currentFile) {
           <div class="file-container">
-            <!-- Mídia -->
             <div class="media-container">
-              @if(currentFile.type === 'image') {
+              @if(currentFile.typeFile === 'image') {
               <img [src]="currentFile.fileBase64" alt="Imagem" class="media-preview" [class.editable]="isEditing">
               }
-              @if(currentFile.type === 'video') {
+              @if(currentFile.typeFile === 'video') {
               <video controls class="media-preview">
                 <source [src]="currentFile.fileBase64" type="video/mp4">
                 Seu navegador não suporta vídeos.
@@ -101,20 +98,42 @@
               }
             </div>
 
-            <!-- Formulário -->
             <div class="form-section">
-              @if(currentFile.title || isEditing){
+              @if(currentFile.title && isEditing){
               <div class="form-group">
                 <label>Título</label>
                 <input type="text" [(ngModel)]="currentFile.title" [disabled]="!isEditing" class="form-input">
-              </div>}
+              </div>
+              }
 
               @if(currentFile.content || isEditing){
               <div class="form-group">
                 <label>Conteúdo</label>
                 <textarea [(ngModel)]="currentFile.content" [disabled]="!isEditing" class="form-textarea"
                   rows="4"></textarea>
-              </div>}
+              </div>
+              }
+
+              @if(currentFile.category || isEditing){
+              <div class="form-group">
+                <label>Categoria</label>
+                <select [(ngModel)]="currentFile.category" [disabled]="!isEditing" class="form-select">
+                  <option value="registro" selected>Registro</option>
+                  <option value="servico">Serviço</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+              }
+
+              <div class="form-group">
+                <label for="">datas</label>
+                <ion-card>
+                  {{currentFile.created_at}}
+                </ion-card>
+                <ion-card>
+                  {{currentFile.updated_at}}
+                </ion-card>
+              </div>
 
               @if(isEditing) {
               <div class="form-group label-image">
@@ -129,7 +148,6 @@
               }
             </div>
 
-            <!-- Botões -->
             <div class="action-buttons">
               @if(!isEditing) {
               <button class="btn edit-btn" (click)="startEditing()">

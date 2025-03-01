@@ -29,12 +29,11 @@ export class AppComponent implements OnInit {
   deletePeriod: any;
 
   async ngOnInit() {
+    await this.loadPreferences();
     await this.fs.checkPermissions();
     await this.fs.initDatabase();
     await this.fs.createAppFolder();
     await this.st.loadStyle();
-    await this.loadPreferences();
-
     if(this.passwordActive && this.password.length > 0 && this.securityMode){
       this.router.navigateByUrl('/login')
     }
@@ -42,7 +41,7 @@ export class AppComponent implements OnInit {
 
   async loadPreferences() {
     const preferences = await this.pf.get([
-      'mode', 'passwordActive', 'password', 'attemptLimit', 'attemptOfNumber', 'deletePeriodically', 'deletePeriod'
+      'mode', 'passwordActive', 'password', 'attemptLimit', 'attemptOfNumber'
     ]);
 
     this.securityMode = preferences[0] === 'enable';
@@ -50,8 +49,6 @@ export class AppComponent implements OnInit {
     this.password = preferences[2] || '';
     this.attemptLimit = preferences[3] === 'true';
     this.attemptOfNumber = preferences[4] ? Number(preferences[4]) : 3;
-    this.deletePeriodically = preferences[5] === 'true';
-    this.deletePeriod = preferences[6] ? Number(preferences[6]) : null;
   }
 
 }

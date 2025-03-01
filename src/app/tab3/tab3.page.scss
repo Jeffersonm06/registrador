@@ -20,6 +20,7 @@
     display: flex;
     align-items: center;
     gap: 20px;
+    border: 1px solid var(--ion-color-medium);
 
     img {
         width: 70px;
@@ -54,6 +55,12 @@
     flex-direction: column;
     gap: 10px;
     margin-bottom: 15px;
+
+    ion-card{
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--ion-color-medium);
+    }
 }
 
 .form-group label {
@@ -64,7 +71,8 @@
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--ion-color-medium);
@@ -106,7 +114,8 @@
 }
 
 .view {
-    padding: 10px;
+    width: 100vw;
+    padding: 25px;
 
     .profile-container {
         max-width: 600px;
@@ -139,7 +148,6 @@
 
     .form-container {
         border-radius: 12px;
-        padding: 25px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
@@ -181,7 +189,7 @@
         min-height: 100px;
     }
 
-    .label-image{
+    .label-image {
         width: 100%;
         display: flex;
         justify-content: center;
@@ -201,21 +209,20 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            background-color: #4299e1;
+            background-color: var(--ion-color-secondary);
             padding: 10px 30px;
             color: white;
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.3s ease;
 
-            &:hover {
-                background-color: #3182ce;
+            &:active {
+                background-color: var(--ion-color-secondary-tint);
             }
         }
     }
 
     .action-buttons {
-        margin-top: 30px;
         text-align: center;
     }
 
@@ -236,29 +243,29 @@
     }
 
     .edit-btn {
-        background-color: #48bb78;
+        background: var(--ion-color-primary);
         color: white;
-
+    
         &:hover {
-            background-color: #38a169;
+            background: var(--ion-color-primary-tint);
         }
     }
 
     .save-btn {
-        background-color: #4299e1;
+        background: var(--ion-color-success);
         color: white;
 
-        &:hover {
-            background-color: #3182ce;
+        &:active {
+            background: var(--ion-color-success-tint);
         }
     }
 
     .cancel-btn {
-        background-color: #f56565;
+        background: var(--ion-color-danger);
         color: white;
 
-        &:hover {
-            background-color: #e53e3e;
+        &:active {
+            background: var(--ion-color-danger-tint);
         }
     }
 

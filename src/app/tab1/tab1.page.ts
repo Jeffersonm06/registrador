@@ -38,6 +38,7 @@ export class Tab1Page implements OnInit {
   isEditing = false; // Estado de edição
   originalFile: MFile | null = null; // Cópia do arquivo original para cancelar edições
   selectedFile: File | null = null;
+  category: string = 'registro';
 
   isActionSheetOpen = false;
   public actionSheetButtons = [
@@ -181,14 +182,14 @@ export class Tab1Page implements OnInit {
         content?: string;
         file?: File;
         filePath?: string;
+        category: string;
       } = {
         title: this.title,
-        content: this.content || ''
+        content: this.content || '',
+        category: this.category || '',
       };
 
       if (this.selectedImage) {
-        const extension = this.selectedImage.name.split('.').pop();
-
         recordData.file = this.selectedImage;
         recordData.filePath = this.title;
       }
@@ -292,17 +293,12 @@ export class Tab1Page implements OnInit {
         const ext = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
         const uniqueFilename = `file_${uniqueSuffix}.${ext}`;
 
-        const base64Data = await this.fsService.blobToBase64(this.selectedFile);
-        await Filesystem.writeFile({
-          path: `FileSystem/${uniqueFilename}`,
-          data: base64Data,
-          directory: Directory.Data,
-        });
+        this.fsService.createFile(uniqueFilename, this.selectedFile)
 
         // Atualiza filePath, ext e type
         this.currentFile.filePath = uniqueFilename;
         this.currentFile.ext = ext;
-        this.currentFile.type = this.getFileType(ext);
+        this.currentFile.typeFile = this.getFileType(ext);
       }
 
       // Atualiza o registro no banco de dados
