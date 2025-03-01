@@ -1,16 +1,175 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>
-      Tab 3
+      Pessoas
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 3</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="false">
+  <!-- Card de exemplo -->
+  <!-- <ion-card class="file">
+    <img src="assets/image.png" alt="Imagem" style="max-width: 100%; height: auto;" />
+    <div class="file-name">
+      <p>Exemplo</p>
+      <p>Pessoa de exemplo</p>
+    </div>
+  </ion-card> -->
 
+  @if(peoples.length > 0){
+  <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="filterPeoples()" debounce="300"
+    placeholder="Pesquisar pessoas..."></ion-searchbar>
+
+  @for(person of filteredPeoples; track $index){
+  <ion-card (click)="setOpen(true, person)" class="file">
+    @if(person.fileBase64){
+    <img [src]="person.fileBase64" alt="Imagem" />
+    }@else {
+    <ion-icon class="icon" name="person"></ion-icon>
+    }
+    <div class="file-name">
+      <p>{{ person.name }}</p>
+      <p>{{ person.description }}</p>
+    </div>
+  </ion-card>
+  }
+  } @else {
+  <ion-card class="message">
+    <ion-label>Nenhuma pessoa encontrada</ion-label>
+  </ion-card>
+  }
+
+  <ion-action-sheet [isOpen]="isActionSheetOpen" header="Ações" [buttons]="actionSheetButtons"
+    (didDismiss)="setOpen(false, null)"></ion-action-sheet>
+
+  <button id="open-modal-people" shape="round">Abrir
+    Adicionar pessoa
+    <ion-icon name="add-circle"></ion-icon>
+  </button>
+
+  <ion-modal trigger="open-modal-people" (willDismiss)="onWillDismiss($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-button (click)="cancel()">Cancelar</ion-button>
+          </ion-buttons>
+          <ion-buttons slot="end">
+            <ion-button (click)="confirm()" [strong]="true">Confirmar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-card>
+          <ion-title class="message">Cadastrar Pessoa</ion-title>
+        </ion-card>
+        <div class="form-group">
+          <input type="text" placeholder="Nome completo" [(ngModel)]="newPerson.name" required />
+        </div>
+        <div class="form-group">
+          <input type="email" placeholder="Email" [(ngModel)]="newPerson.email" />
+        </div>
+        <div class="form-group">
+          <input type="tel" placeholder="Telefone" [(ngModel)]="newPerson.phone" />
+        </div>
+        <div class="form-group">
+          <textarea placeholder="Descrição" [(ngModel)]="newPerson.description"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Selecione uma foto (opcional)</label>
+          <input type="file" accept="image/*" (change)="onImageSelected($event)" #fileInput />
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isModalOpen">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>{{ currentPerson?.name }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="setOpenModal(false, null)">Fechar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <div class="view">
+          @if(currentPerson) {
+          <div class="profile-container">
+            @if(currentPerson.fileBase64) {
+            <div class="profile-image-container">
+              <img [src]="currentPerson.fileBase64" alt="Imagem do perfil" class="profile-image"
+                [class.editable]="isEditing" />
+            </div>
+            }
+
+            <!-- Formulário de edição -->
+            <div class="form-container">
+              <div class="form-group">
+                <label>Nome</label>
+                <input type="text" [(ngModel)]="currentPerson.name" [disabled]="!isEditing" class="form-input">
+              </div>
+              @if(currentPerson.email || isEditing){
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="currentPerson.email" [disabled]="!isEditing" class="form-input">
+              </div>
+              }
+              @if(currentPerson.phone || isEditing){
+              <div class="form-group">
+                <label>Telefone</label>
+                <input type="tel" [(ngModel)]="currentPerson.phone" [disabled]="!isEditing" class="form-input">
+              </div>
+              }
+              @if(currentPerson.description || isEditing){
+              <div class="form-group">
+                <label>Descrição</label>
+                <textarea [(ngModel)]="currentPerson.description" [disabled]="!isEditing" class="form-textarea"
+                  rows="4"></textarea>
+              </div>
+              }
+
+              @if(isEditing) {
+              <div class="form-group label-image">
+                <label class="file-upload">
+                  <input type="file" accept="image/*" (change)="onImageNewSelected($event)" class="file-input">
+                  <span class="upload-button">
+                    <ion-icon name="camera"></ion-icon>
+                    Alterar Foto
+                  </span>
+                </label>
+              </div>
+              }
+            </div>
+
+            <!-- Botões de ação -->
+            <div class="action-buttons">
+              @if(!isEditing) {
+              <button class="btn edit-btn" (click)="startEditing()">
+                Editar Perfil
+              </button>
+              }
+              @if(isEditing) {
+              <div class="edit-actions">
+                <button class="btn save-btn" (click)="savePersonChanges()">
+                  Salvar Alterações
+                </button>
+                <button class="btn cancel-btn" (click)="cancelEditing()">
+                  Cancelar
+                </button>
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Atualizar lista -->
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 </ion-content>

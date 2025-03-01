@@ -126,7 +126,166 @@
     }
 
     .box {
+        width: 100%;
         display: flex;
         align-items: center;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+
+        ion-card {
+            width: 100%;
+            padding: 10px;
+        }
     }
+}
+
+/* Estilos principais */
+.file-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.media-container {
+    margin-bottom: 30px;
+    text-align: center;
+
+    .media-preview {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+        &.editable {
+            border: 2px dashed #4299e1;
+            cursor: pointer;
+
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+    }
+}
+
+.form-section {
+    padding: 25px 10px;
+}
+
+.form-group {
+    width: 100%;
+    margin-bottom: 15px;
+
+    label {
+        display: block;
+        margin-bottom: 2px;
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 0.9rem;
+    }
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+
+    &:focus {
+        border-color: #4299e1;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        outline: none;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+    }
+}
+
+.form-textarea {
+    @extend .form-input;
+    min-height: 120px;
+    resize: vertical;
+}
+
+.label-image {
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+.file-upload-label {
+
+    .file-input {
+        display: none;
+    }
+
+    .upload-button {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        background-color: #4299e1;
+        padding: 10px 30px;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+            background-color: #3182ce;
+        }
+    }
+}
+
+.action-buttons {
+    text-align: center;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background: #4299e1;
+    color: white;
+
+    &:hover {
+        background: #3182ce;
+    }
+}
+
+.save-btn {
+    background: #48bb78;
+    color: white;
+
+    &:hover {
+        background: #38a169;
+    }
+}
+
+.cancel-btn {
+    background: #f56565;
+    color: white;
+
+    &:hover {
+        background: #e53e3e;
+    }
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
 }

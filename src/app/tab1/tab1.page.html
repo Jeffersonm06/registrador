@@ -7,6 +7,7 @@
 </ion-header>
 
 <ion-content [fullscreen]="false">
+  <!-- card de exemplo -->
   <!-- <ion-card class="file">
     <img src="assets/image.png" alt="Imagem" style="max-width: 100%; height: auto;" />
     <div class="file-name">
@@ -34,7 +35,7 @@
   }
   }@else {
   <ion-card class="message">
-    <ion-label>No files found</ion-label>
+    <ion-label>Nenhum arquivo encontrado</ion-label>
   </ion-card>
   }
   <ion-action-sheet [isOpen]="isActionSheetOpen" header="Ações" [buttons]="actionSheetButtons"
@@ -60,7 +61,7 @@
           <ion-title class="message">criar arquivo</ion-title>
         </ion-card>
         <div class="form-group">
-          <input type="text" placeholder="Nome do aquivo aqui" [(ngModel)]="title">
+          <input type="text" placeholder="Nome do arquivo aqui" [(ngModel)]="title">
         </div>
         <div class="form-group">
           <textarea name="" id="" [(ngModel)]="content" placeholder="Conteúdo aqui"></textarea>
@@ -83,59 +84,70 @@
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content class="ion-padding">
+      <ion-content>
         <div class="view">
-          @if(currentFile){
-          @if(currentFile.type === 'image'){
-          <img [src]="currentFile.fileBase64" alt="Imagem" style="max-width: 100%; height: auto;" />
-          <div class="box">
-            @if(speaking){
-            <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
-            }
-            <ion-button shape="round" (click)="speak(currentFile.content!)">
-              @if (speaking) {
-              <ion-spinner name="crescent"></ion-spinner>
-              } @else {
-              Leia pra mim
+          @if(currentFile) {
+          <div class="file-container">
+            <!-- Mídia -->
+            <div class="media-container">
+              @if(currentFile.type === 'image') {
+              <img [src]="currentFile.fileBase64" alt="Imagem" class="media-preview" [class.editable]="isEditing">
               }
-            </ion-button>
-          </div>
-          <p>{{ currentFile.content }}</p>
-          }
-          @if (currentFile.type === 'video') {
-          <video controls>
-            <source [src]="currentFile.fileBase64" type="video/mp4">
-            Seu navegador não suporta vídeos.
-          </video>
-          <div class="box">
-            @if(speaking){
-            <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
-            }
-            <ion-button shape="round" (click)="speak(currentFile.content!)">
-              @if (speaking) {
-              <ion-spinner name="crescent"></ion-spinner>
-              } @else {
-              Leia pra mim
+              @if(currentFile.type === 'video') {
+              <video controls class="media-preview">
+                <source [src]="currentFile.fileBase64" type="video/mp4">
+                Seu navegador não suporta vídeos.
+              </video>
               }
-            </ion-button>
-          </div>
-          <p>{{ currentFile.content }}</p>
-          }
-          @if(currentFile.type === 'text'){
-          <div class="box">
-            @if(speaking){
-            <ion-button shape="round" color="danger" (click)="stop()">Pare</ion-button>
-            }
-            <ion-button shape="round" (click)="speak(currentFile.content!)">
-              @if (speaking) {
-              <ion-spinner name="crescent"></ion-spinner>
-              } @else {
-              Leia pra mim
+            </div>
+
+            <!-- Formulário -->
+            <div class="form-section">
+              @if(currentFile.title || isEditing){
+              <div class="form-group">
+                <label>Título</label>
+                <input type="text" [(ngModel)]="currentFile.title" [disabled]="!isEditing" class="form-input">
+              </div>}
+
+              @if(currentFile.content || isEditing){
+              <div class="form-group">
+                <label>Conteúdo</label>
+                <textarea [(ngModel)]="currentFile.content" [disabled]="!isEditing" class="form-textarea"
+                  rows="4"></textarea>
+              </div>}
+
+              @if(isEditing) {
+              <div class="form-group label-image">
+                <label class="file-upload-label">
+                  <input type="file" accept="image/*, video/*" (change)="onFileSelected($event)" class="file-input">
+                  <span class="upload-button">
+                    <ion-icon name="camera"></ion-icon>
+                    Alterar Arquivo
+                  </span>
+                </label>
+              </div>
               }
-            </ion-button>
+            </div>
+
+            <!-- Botões -->
+            <div class="action-buttons">
+              @if(!isEditing) {
+              <button class="btn edit-btn" (click)="startEditing()">
+                Editar
+              </button>
+              }
+              @if(isEditing) {
+              <div class="button-group">
+                <button class="btn save-btn" (click)="saveFileChanges()">
+                  Salvar
+                </button>
+                <button class="btn cancel-btn" (click)="cancelEditing()">
+                  Cancelar
+                </button>
+              </div>
+              }
+            </div>
           </div>
-          <p>{{ currentFile.content }}</p>
-          }
           }
         </div>
       </ion-content>

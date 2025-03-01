@@ -1,57 +1,32 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  IonButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonModal,
-  IonTitle,
-  IonToolbar,
-  IonIcon,
-  IonLabel,
-  IonCard,
-  IonActionSheet,
-  AlertController,
-  IonSearchbar,
-  IonSpinner,
-  IonRefresher,
-  IonRefresherContent,
+  IonButton, IonButtons, IonContent, IonHeader, IonModal, IonTitle,
+  IonToolbar, IonIcon, IonLabel, IonCard, IonActionSheet, AlertController,
+  IonSearchbar, IonSpinner, IonRefresher, IonRefresherContent, LoadingController,
+  ToastController, IonItem
 } from '@ionic/angular/standalone';
 import { OverlayEventDetail } from '@ionic/core/components';
 import { MFile } from '../interfaces/m-file';
 import { FilesystemService } from '../services/filesystem.service';
 import { TtsService } from '../services/tts.service';
 import { addIcons } from 'ionicons';
-import { addCircle, film } from 'ionicons/icons';
+import { addCircle, camera, film } from 'ionicons/icons';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   imports: [
-    FormsModule,
-    IonButton,
-    IonButtons,
-    IonContent,
-    IonHeader,
-    IonModal,
-    IonTitle,
-    IonToolbar,
-    IonIcon,
-    IonLabel,
-    IonCard,
-    IonActionSheet,
-    IonSearchbar,
-    IonSpinner,
-    IonRefresher,
-    IonRefresherContent,
+    FormsModule, IonButton, IonButtons, IonContent, IonHeader, IonModal,
+    IonTitle, IonToolbar, IonIcon, IonLabel, IonCard, IonActionSheet,
+    IonSearchbar, IonRefresher, IonRefresherContent
   ],
 })
 export class Tab1Page implements OnInit {
   @ViewChild(IonModal) modal!: IonModal;
 
-  message = '';
   title!: string;
   content!: string;
   files: MFile[] = [];
@@ -60,7 +35,9 @@ export class Tab1Page implements OnInit {
   selectedImage: File | null = null;
   isModalOpen = false;
   searchQuery: string = '';
-  speaking = false;
+  isEditing = false; // Estado de edição
+  originalFile: MFile | null = null; // Cópia do arquivo original para cancelar edições
+  selectedFile: File | null = null;
 
   isActionSheetOpen = false;
   public actionSheetButtons = [
@@ -68,16 +45,16 @@ export class Tab1Page implements OnInit {
       text: 'Ver arquivo',
       role: 'confirm',
       handler: async () => {
-        this.setOpenModal(true, this.currentFile); // Abre o modal
+        this.setOpenModal(true, this.currentFile)
         return true;
       }
     },
     {
       text: 'Compartilhar',
-      role: 'confirm',
+      role: 'share',
       handler: async () => {
         if (this.currentFile) {
-          this.filesystemService.shareFile(this.currentFile);
+          this.fsService.shareFile(this.currentFile);
         }
         return false;
       }
@@ -96,9 +73,8 @@ export class Tab1Page implements OnInit {
                 text: 'Deletar',
                 handler: async () => {
                   if (this.currentFile !== null) {
-                    // Utiliza o método do DB para deletar o registro, assumindo que currentFile.id existe.
-                    await this.filesystemService.deleteFileRecord(this.currentFile.id);
-                    this.files = await this.filesystemService.getAllFileRecords();
+                    await this.fsService.deleteFileRecord(this.currentFile.id);
+                    this.files = await this.fsService.getAllFileRecords();
                     this.setOpen(false, null);
                     return true;
                   }
@@ -129,29 +105,32 @@ export class Tab1Page implements OnInit {
   ];
 
   constructor(
-    private filesystemService: FilesystemService,
+    private fsService: FilesystemService,
     private alertController: AlertController,
-    private tts: TtsService
+    private loadingCtrl: LoadingController,
+    private toastCtrl: ToastController
   ) {
     addIcons({
-      film, addCircle
+      film, addCircle, camera
     })
-   }
+  }
 
   async ngOnInit(): Promise<void> {
-    // Utilize o método que recupera os registros do banco de dados
-    setTimeout(async () => {
-      this.files = await this.filesystemService.getAllFileRecords();
-      console.log(this.files);
-
-    // Checa permissões (se necessário)
-    const hasPermission = await this.filesystemService.checkPermissions();
-    if (!hasPermission) {
-      alert("Permissão negada para acessar o armazenamento.");
-      return;
+    const loading = await this.loadingCtrl.create();
+    await loading.present();
+    try {
+      this.files = await this.fsService.getAllFileRecords();
+      const hasPermission = await this.fsService.checkPermissions();
+      if (!hasPermission) {
+        alert("Permissão negada para acessar o armazenamento.");
+        return;
+      }
+      this.filteredFiles = [...this.files];
+    } catch {
+      console.log('Erro ao carregar dados');
+    } finally {
+      loading.dismiss();
     }
-    this.filteredFiles = [...this.files];
-    }, 3000)
 
   }
 
@@ -169,19 +148,22 @@ export class Tab1Page implements OnInit {
   setOpen(isOpen: boolean, file: MFile | null) {
     this.isActionSheetOpen = isOpen;
     if (file) this.currentFile = file;
-    console.log('Arquivo selecionado:', this.currentFile);
   }
 
   async deleteFile(file: MFile): Promise<void> {
+    const loading = await this.loadingCtrl.create();
+    await loading.present();
     try {
-      // Agora usa o método do banco para exclusão (assumindo que file.id existe)
-      await this.filesystemService.deleteFileRecord(file.id);
-      this.files = await this.filesystemService.getAllFileRecords();
+      await this.fsService.deleteFileRecord(file.id);
+      this.files = await this.fsService.getAllFileRecords();
       this.filteredFiles = [...this.files];
     } catch (error) {
       console.error('Erro ao deletar arquivo:', error);
+    } finally {
+      loading.dismiss();
     }
   }
+
 
   cancel() {
     this.modal.dismiss(null, 'cancel');
@@ -194,7 +176,6 @@ export class Tab1Page implements OnInit {
     if (!this.title) return;
 
     try {
-      // Dados base para todos os tipos de registro
       const recordData: {
         title: string;
         content?: string;
@@ -205,23 +186,18 @@ export class Tab1Page implements OnInit {
         content: this.content || ''
       };
 
-      // Se houver imagem/vídeo selecionada, adiciona o arquivo e gera um nome único
       if (this.selectedImage) {
         const extension = this.selectedImage.name.split('.').pop();
 
         recordData.file = this.selectedImage;
         recordData.filePath = this.title;
-        // Se desejar, pode manter o conteúdo textual junto com a mídia.
       }
 
-      // Salva usando o método unificado que aceita tanto texto quanto arquivo
-      await this.filesystemService.saveRecord(recordData);
+      await this.fsService.saveRecord(recordData);
 
-      // Atualiza a lista de registros
-      this.files = await this.filesystemService.getAllFileRecords();
+      this.files = await this.fsService.getAllFileRecords();
       this.filteredFiles = [...this.files];
 
-      // Limpa os campos do formulário
       this.resetForm();
 
     } catch (error) {
@@ -237,7 +213,6 @@ export class Tab1Page implements OnInit {
     }
   }
 
-  // Método auxiliar para limpar o formulário
   private resetForm() {
     this.title = '';
     this.content = '';
@@ -248,13 +223,13 @@ export class Tab1Page implements OnInit {
 
   async onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
     if (event.detail.role === 'confirm') {
-      this.files = await this.filesystemService.getAllFileRecords();
+      this.files = await this.fsService.getAllFileRecords();
       this.filteredFiles = [...this.files];
     }
   }
 
   async ionViewDidEnter() {
-    this.files = await this.filesystemService.getAllFileRecords();
+    this.files = await this.fsService.getAllFileRecords();
     this.filteredFiles = [...this.files];
   }
 
@@ -271,28 +246,100 @@ export class Tab1Page implements OnInit {
     if (open !== false && currentFile != null) this.currentFile = currentFile;
   }
 
-  speak(text: string) {
-    this.speaking = true;
-    console.log(this.speaking);
-    this.tts.speak(text, () => {
-      this.speaking = false;
-      console.log(this.speaking);
-    });
-  }
-
-  stop() {
-    this.speaking = false;
-    this.tts.stop();
-  }
-
   async handleRefresh(event: CustomEvent) {
     try {
-      this.files = await this.filesystemService.getAllFileRecords();
+      this.files = await this.fsService.getAllFileRecords();
       this.filteredFiles = [...this.files];
     } catch (error) {
       console.error('Erro ao atualizar:', error);
     } finally {
       (event.target as HTMLIonRefresherElement).complete();
     }
+  }
+
+  // Inicia a edição
+  startEditing() {
+    this.isEditing = true;
+    this.originalFile = { ...this.currentFile! }; // Salva cópia do original
+  }
+
+  // Cancela a edição e restaura valores originais
+  cancelEditing() {
+    this.isEditing = false;
+    if (this.originalFile) {
+      this.currentFile = { ...this.originalFile };
+    }
+    this.selectedFile = null; // Limpa arquivo selecionado
+  }
+
+  // Salva alterações do arquivo
+  async saveFileChanges() {
+    if (!this.currentFile) return;
+
+    try {
+      // Se um novo arquivo foi selecionado
+      if (this.selectedFile) {
+        // Remove o arquivo antigo (opcional)
+        if (this.currentFile.filePath) {
+          await Filesystem.deleteFile({
+            path: `FileSystem/${this.currentFile.filePath}`,
+            directory: Directory.Data,
+          });
+        }
+
+        // Armazena o novo arquivo
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = this.selectedFile.name.split('.').pop()?.toLowerCase() || '';
+        const uniqueFilename = `file_${uniqueSuffix}.${ext}`;
+
+        const base64Data = await this.fsService.blobToBase64(this.selectedFile);
+        await Filesystem.writeFile({
+          path: `FileSystem/${uniqueFilename}`,
+          data: base64Data,
+          directory: Directory.Data,
+        });
+
+        // Atualiza filePath, ext e type
+        this.currentFile.filePath = uniqueFilename;
+        this.currentFile.ext = ext;
+        this.currentFile.type = this.getFileType(ext);
+      }
+
+      // Atualiza o registro no banco de dados
+      await this.fsService.updateFile(this.currentFile);
+      this.isEditing = false;
+
+      // Recarrega a lista de arquivos
+      this.files = await this.fsService.getAllFileRecords();
+      this.filteredFiles = [...this.files];
+
+      this.showToast('Alterações salvas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      this.showToast('Erro ao salvar alterações.');
+    }
+  }
+
+  // Determina o tipo do arquivo (image, video)
+  private getFileType(ext: string): 'image' | 'video' | 'text' {
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'];
+    const videoExtensions = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+    return imageExtensions.includes(ext) ? 'image' : videoExtensions.includes(ext) ? 'video' : 'text';
+  }
+
+  // Manipula seleção de novo arquivo
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+    }
+  }
+
+  private async showToast(message: string) {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2000
+    });
+    await toast.present();
   }
 }

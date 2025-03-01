@@ -9,7 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "copysqlwasm": "copyfiles -u 3 node_modules/sql.js/dist/sql-wasm.wasm src/assets"
   },
   "private": true,
   "dependencies": {
@@ -36,6 +37,7 @@
     "@ionic/angular": "^8.4.3",
     "@ionic/core": "^8.4.3",
     "ionicons": "^7.4.0",
+    "jeep-sqlite": "^2.8.0",
     "jspdf": "^3.0.0",
     "node-html-parser": "^7.0.1",
     "rxjs": "~7.8.0",

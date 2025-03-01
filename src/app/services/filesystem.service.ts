@@ -6,6 +6,7 @@ import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacito
 
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { People } from '../interfaces/people';
 
 const appFolder = 'FileSystem';
 
@@ -63,7 +64,18 @@ export class FilesystemService {
           ext TEXT,
           type TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS peoples (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          email TEXT,
+          phone TEXT,
+          filePath TEXT,
+          ext TEXT,
+          description TEXT
+        );
       `;
+
       await this.db.execute(createTableQuery);
     } catch (error) {
       this.presentAlert({
@@ -154,6 +166,78 @@ export class FilesystemService {
     }
   }
 
+  async savePeople(data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    description?: string;
+    file?: File;
+  }): Promise<any> {
+    if (!this.db) throw new Error('Banco não inicializado');
+    if (!data.name) throw new Error('Nome é obrigatório');
+
+    let filePath = '';
+    let ext = '';
+
+    try {
+      if (data.file) {
+        await this.createAppFolder();
+
+        const hasPermission = await this.checkPermissions();
+        if (!hasPermission) {
+          throw new Error('Permissão de armazenamento negada');
+        }
+
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const originalName = data.file.name;
+        ext = originalName.split('.').pop()?.toLowerCase() || '';
+        const uniqueFilename = `people_${uniqueSuffix}.${ext}`;
+
+        const base64Data = await this.blobToBase64(data.file);
+        await Filesystem.writeFile({
+          path: `${appFolder}/${uniqueFilename}`,
+          data: base64Data,
+          directory: Directory.Data,
+        });
+
+        filePath = uniqueFilename;
+      }
+
+      const query = `
+        INSERT INTO peoples 
+          (name, email, phone, filePath, ext, description) 
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+
+      const result = await this.db.run(query, [
+        data.name,
+        data.email || null,
+        data.phone || null,
+        filePath || null,
+        ext || null,
+        data.description || null
+      ]);
+
+      if (!result.changes?.lastId) {
+        throw new Error('Falha ao inserir registro de pessoa');
+      }
+
+      return {
+        id: result.changes.lastId,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        description: data.description,
+        filePath: filePath,
+        ext: ext
+      };
+
+    } catch (error) {
+      console.error('Erro no savePeople:', error);
+      throw error;
+    }
+  }
+
   async writeBinaryFile(filePath: string, data: File): Promise<void> {
     const fullPath = `${appFolder}/${filePath}`;
     const hasPermission = await this.checkPermissions();
@@ -176,7 +260,7 @@ export class FilesystemService {
     }
   }
 
-  private blobToBase64(blob: Blob): Promise<string> {
+  blobToBase64(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -195,7 +279,17 @@ export class FilesystemService {
   async getAllFileRecords(): Promise<MFile[]> {
     if (!this.db) {
       console.error('Banco não inicializado.');
-      return [];
+      return [
+        {
+          id: 0,
+          title: 'Arquivo',
+          content: 'ababababa',
+          filePath: 'assets/image.png',
+          fileBase64: 'assets/image.png',
+          type: 'image',
+          ext: 'png'
+        }
+      ];
     }
     try {
       const query = `SELECT * FROM files`;
@@ -227,6 +321,53 @@ export class FilesystemService {
     }
   }
 
+  async getAllPeoples(): Promise<any[]> {
+    if (!this.db) {
+      console.error('Banco não inicializado.');
+      return [
+        {
+          id: 0,
+          name: 'Jeff',
+          email: 'w@getMaxListeners.com',
+          filePath: 'assets/image.png',
+          fileBase64: 'assets/image.png',
+          ext: 'png'
+        }
+      ];
+    }
+    try {
+      const query = `SELECT * FROM peoples`;
+      const result = await this.db.query(query);
+      const rows = result.values ?? [];
+
+      const peoples = await Promise.all(
+        rows.map(async (row: any) => {
+          let fileBase64 = '';
+          if (row.filePath) {
+            const fileData = await this.readBinaryFile(row.filePath);
+            fileBase64 = fileData || '';
+          }
+
+          return {
+            id: row.id,
+            name: row.name,
+            email: row.email,
+            phone: row.phone,
+            description: row.description,
+            filePath: row.filePath,
+            fileBase64: fileBase64,
+            ext: row.ext
+          };
+        })
+      );
+
+      return peoples;
+    } catch (error) {
+      console.error('Erro ao recuperar pessoas:', error);
+      return [];
+    }
+  }
+
   async deleteFileRecord(id: number): Promise<void> {
     if (!this.db) {
       alert('Banco não inicializado.');
@@ -240,6 +381,76 @@ export class FilesystemService {
       alert('Erro ao excluir registro: ' + error);
     }
   }
+
+  async deletePeople(id: number): Promise<void> {
+    if (!this.db) {
+      throw new Error('Banco não inicializado.');
+    }
+
+    try {
+      // Primeiro, busca o registro para obter o filePath (se houver)
+      const query = `SELECT filePath FROM peoples WHERE id = ?`;
+      const result = await this.db.query(query, [id]);
+
+      if (result.values && result.values.length > 0) {
+        const filePath = result.values[0].filePath;
+
+        // Se houver um arquivo associado, exclui do sistema de arquivos
+        if (filePath) {
+          await Filesystem.deleteFile({
+            path: `${appFolder}/${filePath}`,
+            directory: Directory.Data,
+          });
+        }
+      }
+
+      // Exclui o registro do banco de dados
+      const deleteQuery = `DELETE FROM peoples WHERE id = ?`;
+      await this.db.run(deleteQuery, [id]);
+
+      console.log('Pessoa excluída com sucesso.');
+    } catch (error) {
+      console.error('Erro ao excluir pessoa:', error);
+      throw error; // Propaga o erro para ser tratado no componente
+    }
+  }
+
+  async updatePerson(person: People): Promise<void> {
+    if (!this.db) throw new Error('Banco não inicializado');
+
+    try {
+      await this.db.run(
+        `UPDATE peoples 
+         SET name = ?, email = ?, phone = ?, description = ?, filePath = ?, ext = ? 
+         WHERE id = ?;`,
+        [person.name, person.email, person.phone, person.description, person.filePath, person.ext, person.id]
+      );
+
+      console.log('Pessoa atualizada com sucesso.');
+    } catch (error) {
+      console.error('Erro ao atualizar pessoa:', error);
+      throw error;
+    }
+  }
+
+  async updateFile(file: MFile): Promise<void> {
+    if (!this.db) throw new Error('Banco não inicializado');
+
+    try {
+      await this.db.run(
+        `UPDATE files 
+         SET title = ?, content = ?, filePath = ?, ext = ?, type = ? 
+         WHERE id = ?;`,
+        [file.title, file.content, file.filePath, file.ext, file.type, file.id]
+      );
+
+      console.log('Arquivo atualizado com sucesso.');
+    } catch (error) {
+      console.error('Erro ao atualizar arquivo:', error);
+      throw error;
+    }
+  }
+
 
   /***Fim dos Métodos de Banco de Dados ***/
 

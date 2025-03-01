@@ -38,8 +38,8 @@ export class Tab2Page implements OnInit {
   password: string = '';
   attemptLimit: boolean = false;
   attemptOfNumber: number = 3;
-  deletePeriodically: boolean = false;
-  deletePeriod: any;
+  /* deletePeriodically: boolean = false;
+  deletePeriod: any; */
 
   deletePeriodOptions: any = [
     { value: 1, label: '1 dia' },
@@ -96,8 +96,8 @@ export class Tab2Page implements OnInit {
     this.password = preferences[2] || '';
     this.attemptLimit = preferences[3] === 'true';
     this.attemptOfNumber = preferences[4] ? Number(preferences[4]) : 3;
-    this.deletePeriodically = preferences[5] === 'true';
-    this.deletePeriod = preferences[6] ? Number(preferences[6]) : null;
+    /* this.deletePeriodically = preferences[5] === 'true';
+    this.deletePeriod = preferences[6] ? Number(preferences[6]) : null; */
   }
 
   async savePreferences() {
@@ -107,8 +107,8 @@ export class Tab2Page implements OnInit {
       { key: 'password', value: this.password },
       { key: 'attemptLimit', value: this.attemptLimit ? 'true' : 'false' },
       { key: 'attemptOfNumber', value: this.attemptOfNumber.toString() },
-      { key: 'deletePeriodically', value: this.deletePeriodically ? 'true' : 'false' },
-      { key: 'deletePeriod', value: this.deletePeriod ? this.deletePeriod.toString() : '' }
+      /* { key: 'deletePeriodically', value: this.deletePeriodically ? 'true' : 'false' },
+      { key: 'deletePeriod', value: this.deletePeriod ? this.deletePeriod.toString() : '' } */
     ]);
   }
 
@@ -128,10 +128,8 @@ export class Tab2Page implements OnInit {
     this.savePreferences();
   }
 
-  onDeletePeriodToggleChange(event: any) {
+  /* onDeletePeriodToggleChange(event: any) {
     this.deletePeriodically = event.detail.checked;
     this.savePreferences();
-  }
-
-
+  } */
 }
