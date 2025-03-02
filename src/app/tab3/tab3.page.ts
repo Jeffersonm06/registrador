@@ -12,6 +12,7 @@ import { FilesystemService } from '../services/filesystem.service';
 import { OverlayEventDetail } from '@ionic/core';
 import { People } from '../interfaces/people';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { PeopleService } from '../services/people.service';
 
 @Component({
   selector: 'app-tab3',
@@ -68,8 +69,8 @@ export class Tab3Page implements OnInit {
                 text: 'Deletar',
                 handler: async () => {
                   if (this.currentPerson !== null) {
-                    await this.fsService.deleteFileRecord(this.currentPerson.id);
-                    this.peoples = await this.fsService.getAllPeoples();
+                    await this.pService.deletePeople(this.currentPerson.id);
+                    this.peoples = await this.pService.getAllPeoples();
                     this.setOpen(false, null);
                     return true;
                   }
@@ -100,6 +101,7 @@ export class Tab3Page implements OnInit {
 
   constructor(
     private fsService: FilesystemService,
+    private pService: PeopleService,
     private loadingCtrl: LoadingController,
     private toastCtrl: ToastController,
     private alertController: AlertController,
@@ -115,7 +117,7 @@ export class Tab3Page implements OnInit {
     const loading = await this.loadingCtrl.create();
     await loading.present();
     try {
-      this.peoples = await this.fsService.getAllPeoples();
+      this.peoples = await this.pService.getAllPeoples();
       this.filteredPeoples = [...this.peoples];
     } catch (error) {
       console.error(error);
@@ -151,7 +153,7 @@ export class Tab3Page implements OnInit {
     const loading = await this.loadingCtrl.create();
     await loading.present();
     try {
-      await this.fsService.deletePeople(id);
+      await this.pService.deletePeople(id);
       this.peoples = this.peoples.filter(p => p.id !== id);
       this.filterPeoples();
       this.showToast('Pessoa removida com sucesso');
@@ -175,7 +177,7 @@ export class Tab3Page implements OnInit {
 
   async onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
     if (event.detail.role === 'confirm') {
-      this.peoples = await this.fsService.getAllPeoples();
+      this.peoples = await this.pService.getAllPeoples();
       this.filteredPeoples = [...this.peoples];
     }
   }
@@ -184,7 +186,7 @@ export class Tab3Page implements OnInit {
     const loading = await this.loadingCtrl.create();
     await loading.present();
     try {
-      await this.fsService.savePeople(this.newPerson);
+      await this.pService.savePeople(this.newPerson);
       this.showToast('Pessoa cadastrada com sucesso');
       await this.loadPeoples();
     } catch (error) {
@@ -244,7 +246,7 @@ export class Tab3Page implements OnInit {
       }
 
       // Atualiza a pessoa no banco de dados
-      await this.fsService.updatePerson(this.currentPerson);
+      await this.pService.updatePerson(this.currentPerson);
       this.isEditing = false;
 
       // Exibe uma mensagem de sucesso

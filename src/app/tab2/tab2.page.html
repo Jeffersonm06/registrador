@@ -7,7 +7,25 @@
 </ion-header>
 
 <ion-content [fullscreen]="false">
-  <ion-card class="message">
+  <ion-card class="message" color="secondary">
+    <ion-title>
+      Config. paginas
+    </ion-title>
+  </ion-card>
+  <div class="pages">
+    @for(page of pages; track $index){
+    <ion-card class="toggle-card">
+      <ion-toggle [(ngModel)]="page.active" (ionChange)="onPageToggleChange()" labelPlacement="stacked"
+        alignment="center">
+        {{page.title}}
+      </ion-toggle><br>
+    </ion-card>
+    }
+  </div>
+  <div class="justify-center">
+    <ion-button color="secondary" (click)="reload()">Carregar</ion-button>
+  </div>
+  <ion-card class="message" color="secondary">
     <ion-title>
       Config. de estilo
     </ion-title>
@@ -32,7 +50,7 @@
       modo de segurança</ion-toggle>
   </ion-card>
   @if (securityMode){
-  <ion-card class="message">
+  <ion-card class="message" color="secondary">
     <ion-title>
       Modo de segurança ativado
     </ion-title>
@@ -43,8 +61,8 @@
   </ion-card>
   @if (passwordActive){
   <ion-card class="message">
-    <input type="password" [(ngModel)]="password" (ionInput)="savePreferences()"
-      placeholder="Defina uma senha"><button (click)="savePreferences()">Confirmar</button>
+    <input type="password" [(ngModel)]="password" (ionInput)="savePreferences()" placeholder="Defina uma senha"><button
+      (click)="savePreferences()">Confirmar</button>
   </ion-card>
   }
   <ion-card class="toggle-card">
@@ -57,7 +75,7 @@
       (click)="savePreferences()">Confirmar</button>
   </ion-card>
   }
- <!--  <ion-card class="toggle-card">
+  <!--  <ion-card class="toggle-card">
     <ion-toggle justify="space-between" [(ngModel)]="deletePeriodically"
       (ionChange)="onDeletePeriodToggleChange($event)">Apagar arquivos em períodos</ion-toggle>
   </ion-card>

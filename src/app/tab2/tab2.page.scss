@@ -3,6 +3,22 @@
     text-align: center;
 }
 
+.justify-center{
+    display: flex;
+    justify-content: center;
+}
+
+.pages{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    ion-card{
+        flex: 1;
+        min-width: 150px;
+    }
+}
+
 .select-card {
 
     ion-select {

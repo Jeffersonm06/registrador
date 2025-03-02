@@ -4,6 +4,7 @@ import { FilesystemService } from './services/filesystem.service';
 import { StyleService } from './services/style.service';
 import { PreferencesService } from './services/preferences.service';
 import { Router } from '@angular/router';
+import { DatabaseService } from './services/database.service';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,8 @@ export class AppComponent implements OnInit {
     private fs: FilesystemService,
     private st: StyleService,
     private pf: PreferencesService,
-    private router: Router
+    private router: Router,
+    private data: DatabaseService
   ) { }
 
   securityMode: boolean = false;
@@ -31,7 +33,7 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     await this.loadPreferences();
     await this.fs.checkPermissions();
-    await this.fs.initDatabase();
+    await this.data.initDatabase();
     await this.fs.createAppFolder();
     await this.st.loadStyle();
     if(this.passwordActive && this.password.length > 0 && this.securityMode){

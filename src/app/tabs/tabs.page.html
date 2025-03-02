@@ -1,16 +1,63 @@
 <ion-tabs>
   <ion-tab-bar slot="bottom">
-    <ion-tab-button tab="tab1" href="/tabs/tab1">
+    <!-- Tab Arquivos -->
+    @if (showArquivos) {
+    <ion-tab-button tab="tab1">
       <ion-icon aria-hidden="true" name="folder"></ion-icon>
       <ion-label>Arquivos</ion-label>
     </ion-tab-button>
+    }
 
-    <ion-tab-button tab="tab3" href="/tabs/tab3">
+    <!-- Tab Pessoas -->
+    @if (showPessoas) {
+    <ion-tab-button tab="tab3">
       <ion-icon aria-hidden="true" name="people"></ion-icon>
       <ion-label>Pessoas</ion-label>
     </ion-tab-button>
+    }
 
-    <ion-tab-button tab="tab2" href="/tabs/tab2">
+    <!-- Tab Clientes -->
+    @if (showClientes) {
+    <ion-tab-button tab="clients">
+      <ion-icon aria-hidden="true" name="business"></ion-icon>
+      <ion-label>Clientes</ion-label>
+    </ion-tab-button>
+    }
+
+    <!-- Tab Pagamentos -->
+    @if (showPagamentos) {
+    <ion-tab-button tab="payments">
+      <ion-icon aria-hidden="true" name="cash"></ion-icon>
+      <ion-label>Pagamentos</ion-label>
+    </ion-tab-button>
+    }
+
+    <!-- Tab Produtos -->
+    @if (showProdutos) {
+    <ion-tab-button tab="products">
+      <ion-icon aria-hidden="true" name="cart"></ion-icon>
+      <ion-label>Produtos</ion-label>
+    </ion-tab-button>
+    }
+
+    <!-- Tab Serviços -->
+    @if (showServicos) {
+    <ion-tab-button tab="services">
+      <ion-icon aria-hidden="true" name="card"></ion-icon>
+      <ion-label>Serviços</ion-label>
+    </ion-tab-button>
+    }
+
+    <!-- Tab Fornecedores -->
+    @if (showFornecedores) {
+    <ion-tab-button tab="suppliers">
+      <ion-icon aria-hidden="true" name="business"></ion-icon>
+      <ion-label>Fornecedores</ion-label>
+    </ion-tab-button>
+    }
+
+    <!-- Tab Ajustes (sempre visível) -->
+    <ion-tab-button tab="tab2">
       <ion-icon aria-hidden="true" name="cog"></ion-icon>
       <ion-label>Ajustes</ion-label>
     </ion-tab-button>

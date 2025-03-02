@@ -1,34 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonCard,
-  IonSelect,
-  IonSelectOption,
-  IonToggle
+  IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonSelect, IonSelectOption,
+  IonToggle, IonGrid, IonRow, IonCol, IonButton
 } from '@ionic/angular/standalone';
 import { StyleService } from '../services/style.service';
 import { PreferencesService } from '../services/preferences.service';
 
+interface Page {
+  title: string;
+  active: boolean;
+}
 @Component({
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
   imports: [
-    FormsModule,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonCard,
-    IonSelect,
-    IonSelectOption,
-    IonToggle
+    FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonSelect,
+    IonSelectOption, IonToggle, IonButton
   ]
 })
+
 export class Tab2Page implements OnInit {
 
   selectedFont = 'Arial';
@@ -40,6 +32,16 @@ export class Tab2Page implements OnInit {
   attemptOfNumber: number = 3;
   /* deletePeriodically: boolean = false;
   deletePeriod: any; */
+
+  pages: Page[] = [
+    { title: 'Arquivos', active: false },
+    { title: 'Pessoas', active: false },
+    { title: 'Clientes', active: false },
+    { title: 'Serviços', active: false },
+    { title: 'Fornecedores', active: false },
+    { title: 'Produtos', active: false },
+    { title: 'Pagamentos', active: false },
+  ]
 
   deletePeriodOptions: any = [
     { value: 1, label: '1 dia' },
@@ -87,10 +89,17 @@ export class Tab2Page implements OnInit {
   }
 
   async loadPreferences() {
-    const preferences = await this.pf.get([
-      'mode', 'passwordActive', 'password', 'attemptLimit', 'attemptOfNumber', 'deletePeriodically', 'deletePeriod'
-    ]);
+    // Chaves das preferências
+    const keys = [
+      'mode', 'passwordActive', 'password', 'attemptLimit',
+      'attemptOfNumber', 'deletePeriodically', 'deletePeriod',
+      ...this.pages.map(page => `page_${page.title}`) // Adiciona as chaves das páginas
+    ];
 
+    // Carrega todas as preferências
+    const preferences = await this.pf.get(keys);
+
+    // Atribui as preferências gerais
     this.securityMode = preferences[0] === 'enable';
     this.passwordActive = preferences[1] === 'true';
     this.password = preferences[2] || '';
@@ -98,10 +107,17 @@ export class Tab2Page implements OnInit {
     this.attemptOfNumber = preferences[4] ? Number(preferences[4]) : 3;
     /* this.deletePeriodically = preferences[5] === 'true';
     this.deletePeriod = preferences[6] ? Number(preferences[6]) : null; */
+
+    // Atribui as preferências das páginas
+    this.pages.forEach((page, index) => {
+      const pageKey = `page_${page.title}`;
+      const storedValue = preferences[keys.indexOf(pageKey)];
+      page.active = storedValue === 'true';
+    });
   }
 
   async savePreferences() {
-    await this.pf.set([
+    const preferences = [
       { key: 'mode', value: this.securityMode ? 'enable' : 'disable' },
       { key: 'passwordActive', value: this.passwordActive ? 'true' : 'false' },
       { key: 'password', value: this.password },
@@ -109,9 +125,17 @@ export class Tab2Page implements OnInit {
       { key: 'attemptOfNumber', value: this.attemptOfNumber.toString() },
       /* { key: 'deletePeriodically', value: this.deletePeriodically ? 'true' : 'false' },
       { key: 'deletePeriod', value: this.deletePeriod ? this.deletePeriod.toString() : '' } */
-    ]);
+      ...this.pages.map(page => ({
+        key: `page_${page.title}`,  // Ex: page_Arquivos, page_Pessoas
+        value: page.active ? 'true' : 'false'
+      }))
+    ];
+    await this.pf.set(preferences);
   }
 
+  onPageToggleChange() {
+    this.savePreferences();
+  }
 
   onSecurityToggleChange(event: any) {
     this.securityMode = event.detail.checked;
@@ -132,4 +156,8 @@ export class Tab2Page implements OnInit {
     this.deletePeriodically = event.detail.checked;
     this.savePreferences();
   } */
+
+  reload() {
+    window.location.reload()
+  }
 }

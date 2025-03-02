@@ -13,6 +13,7 @@ import { TtsService } from '../services/tts.service';
 import { addIcons } from 'ionicons';
 import { addCircle, camera, film } from 'ionicons/icons';
 import { Directory, Filesystem } from '@capacitor/filesystem';
+import { FilesService } from '../services/files.service';
 
 @Component({
   selector: 'app-tab1',
@@ -74,8 +75,8 @@ export class Tab1Page implements OnInit {
                 text: 'Deletar',
                 handler: async () => {
                   if (this.currentFile !== null) {
-                    await this.fsService.deleteFileRecord(this.currentFile.id);
-                    this.files = await this.fsService.getAllFileRecords();
+                    await this.fService.deleteFileRecord(this.currentFile.id);
+                    this.files = await this.fService.getAllFileRecords();
                     this.setOpen(false, null);
                     return true;
                   }
@@ -107,6 +108,7 @@ export class Tab1Page implements OnInit {
 
   constructor(
     private fsService: FilesystemService,
+    private fService: FilesService,
     private alertController: AlertController,
     private loadingCtrl: LoadingController,
     private toastCtrl: ToastController
@@ -120,7 +122,7 @@ export class Tab1Page implements OnInit {
     const loading = await this.loadingCtrl.create();
     await loading.present();
     try {
-      this.files = await this.fsService.getAllFileRecords();
+      this.files = await this.fService.getAllFileRecords();
       const hasPermission = await this.fsService.checkPermissions();
       if (!hasPermission) {
         alert("Permissão negada para acessar o armazenamento.");
@@ -155,8 +157,8 @@ export class Tab1Page implements OnInit {
     const loading = await this.loadingCtrl.create();
     await loading.present();
     try {
-      await this.fsService.deleteFileRecord(file.id);
-      this.files = await this.fsService.getAllFileRecords();
+      await this.fService.deleteFileRecord(file.id);
+      this.files = await this.fService.getAllFileRecords();
       this.filteredFiles = [...this.files];
     } catch (error) {
       console.error('Erro ao deletar arquivo:', error);
@@ -194,9 +196,9 @@ export class Tab1Page implements OnInit {
         recordData.filePath = this.title;
       }
 
-      await this.fsService.saveRecord(recordData);
+      await this.fService.saveRecord(recordData);
 
-      this.files = await this.fsService.getAllFileRecords();
+      this.files = await this.fService.getAllFileRecords();
       this.filteredFiles = [...this.files];
 
       this.resetForm();
@@ -224,13 +226,13 @@ export class Tab1Page implements OnInit {
 
   async onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
     if (event.detail.role === 'confirm') {
-      this.files = await this.fsService.getAllFileRecords();
+      this.files = await this.fService.getAllFileRecords();
       this.filteredFiles = [...this.files];
     }
   }
 
   async ionViewDidEnter() {
-    this.files = await this.fsService.getAllFileRecords();
+    this.files = await this.fService.getAllFileRecords();
     this.filteredFiles = [...this.files];
   }
 
@@ -249,7 +251,7 @@ export class Tab1Page implements OnInit {
 
   async handleRefresh(event: CustomEvent) {
     try {
-      this.files = await this.fsService.getAllFileRecords();
+      this.files = await this.fService.getAllFileRecords();
       this.filteredFiles = [...this.files];
     } catch (error) {
       console.error('Erro ao atualizar:', error);
@@ -302,11 +304,11 @@ export class Tab1Page implements OnInit {
       }
 
       // Atualiza o registro no banco de dados
-      await this.fsService.updateFile(this.currentFile);
+      await this.fService.updateFile(this.currentFile);
       this.isEditing = false;
 
       // Recarrega a lista de arquivos
-      this.files = await this.fsService.getAllFileRecords();
+      this.files = await this.fService.getAllFileRecords();
       this.filteredFiles = [...this.files];
 
       this.showToast('Alterações salvas com sucesso!');
