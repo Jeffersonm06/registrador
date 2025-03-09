@@ -6,22 +6,32 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="ion-padding">
   @if(peoples.length > 0){
   <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="filterPeoples()" debounce="300"
     placeholder="Pesquisar pessoas..."></ion-searchbar>
 
   @for(person of filteredPeoples; track $index){
-  <ion-card (click)="setOpen(true, person)" class="file">
-    @if(person.fileBase64){
-    <img [src]="person.fileBase64" alt="Imagem" />
-    }@else {
-    <ion-icon class="icon" name="person"></ion-icon>
-    }
-    <div class="file-name">
-      <p>{{ person.name }}</p>
-      <p>{{ person.description }}</p>
+  <ion-card (click)="setOpen(true, person)" class="file-card">
+    <div class="image">
+      <p><b>{{ person.name}}</b></p>
+      @if(person.fileBase64 !== ''){
+      <img [src]="person.fileBase64" alt="Imagem" />
+      }
+      @if (person.typeFile === 'video'){
+      <ion-icon class="icon" name="film"></ion-icon>
+      }
     </div>
+    @if ((person.name && person.fileBase64 == '') || person.description) {
+    <div class="file-text">
+      @if (person.fileBase64 == '') {
+      <p>{{ person.name }}</p>
+      }
+      @if (person.description) {
+      <p>{{ person.description }}</p>
+      }
+    </div>
+    }
   </ion-card>
   }
   } @else {
@@ -33,7 +43,7 @@
   <ion-action-sheet [isOpen]="isActionSheetOpen" header="Ações" [buttons]="actionSheetButtons"
     (didDismiss)="setOpen(false, null)"></ion-action-sheet>
 
-  <button id="open-modal-people" shape="round">Abrir
+  <button id="open-modal-people" shape="round" class="add-item">
     Adicionar pessoa
     <ion-icon name="add-circle"></ion-icon>
   </button>
@@ -50,7 +60,7 @@
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content>
+      <ion-content class="ion-padding">
         <ion-card>
           <ion-title class="message">Cadastrar Pessoa</ion-title>
         </ion-card>

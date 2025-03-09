@@ -42,6 +42,7 @@ export class AppComponent implements OnInit {
   }
 
   async loadPreferences() {
+    this.pf.init()
     const preferences = await this.pf.get([
       'mode', 'passwordActive', 'password', 'attemptLimit', 'attemptOfNumber'
     ]);

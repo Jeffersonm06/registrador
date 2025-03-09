@@ -4,14 +4,13 @@ import {
   IonButton, IonButtons, IonContent, IonHeader, IonModal, IonTitle,
   IonToolbar, IonIcon, IonLabel, IonCard, IonActionSheet, AlertController,
   IonSearchbar, IonSpinner, IonRefresher, IonRefresherContent, LoadingController,
-  ToastController, IonItem
+  ToastController, IonItem, IonCardHeader, IonCardTitle, IonCardContent
 } from '@ionic/angular/standalone';
 import { OverlayEventDetail } from '@ionic/core/components';
 import { MFile } from '../interfaces/m-file';
 import { FilesystemService } from '../services/filesystem.service';
-import { TtsService } from '../services/tts.service';
 import { addIcons } from 'ionicons';
-import { addCircle, camera, film } from 'ionicons/icons';
+import { addCircle, camera, close, film } from 'ionicons/icons';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { FilesService } from '../services/files.service';
 
@@ -114,7 +113,7 @@ export class Tab1Page implements OnInit {
     private toastCtrl: ToastController
   ) {
     addIcons({
-      film, addCircle, camera
+      film, addCircle, camera, close
     })
   }
 

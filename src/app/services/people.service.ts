@@ -90,7 +90,18 @@ export class PeopleService {
         {
           id: 0,
           name: 'Jeff',
-          email: 'w@getMaxListeners.com',
+          email: 'w@gmail.com',
+          filePath: 'assets/image.png',
+          fileBase64: 'assets/image.png',
+          description: 'boboca',
+          ext: 'png',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 0,
+          name: 'Jeff',
+          email: 'w@gmail.com',
           filePath: 'assets/image.png',
           fileBase64: 'assets/image.png',
           ext: 'png',

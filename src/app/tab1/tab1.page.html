@@ -6,24 +6,30 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="false">
+<ion-content [fullscreen]="false" class="ion-padding">
   @if(files.length > 0){
   <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="filterFiles()" debounce="300"
     placeholder="Pesquisar arquivos..."></ion-searchbar>
   @for(file of filteredFiles; track $index){
-  <ion-card (click)="setOpen(true, file)" class="file">
-    @if(file.typeFile === 'image'){
-    <img [src]="file.fileBase64" alt="Imagem" />
+  <ion-card (click)="setOpen(true, file)" class="file-card">
+    @if(file.typeFile == 'image' || file.typeFile == 'video'){
+    <div class="image">
+      <p><b>{{ file.title}}</b></p>
+      @if(file.typeFile === 'image'){
+      <img [src]="file.fileBase64" alt="Imagem" />
+      }
+      @if (file.typeFile === 'video'){
+      <ion-icon class="icon" name="film"></ion-icon>
+      }
+    </div>
     }
-    @if (file.typeFile === 'video'){
-    <ion-icon class="icon" name="film"></ion-icon>
-    }
-    <div class="file-name">
-      <p>{{ file.title}}</p>
+    <div class="file-text">
+      @if (file.title && file.typeFile == 'text') {
+        <p>{{ file.title }}</p>
+      }
       <p>{{ file.content }}</p>
     </div>
   </ion-card>
-
   }
   }@else {
   <ion-card class="message">
@@ -32,7 +38,7 @@
   }
   <ion-action-sheet [isOpen]="isActionSheetOpen" header="Ações" [buttons]="actionSheetButtons"
     (didDismiss)="setOpen(false, null)"></ion-action-sheet>
-  <button id="open-modal" shape="round">
+  <button id="open-modal" class="add-item">
     Adicionar arquivo
     <ion-icon name="add-circle"></ion-icon>
   </button>
@@ -78,7 +84,9 @@
         <ion-toolbar color="primary">
           <ion-title>{{ currentFile?.title }}</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="setOpenModal(false, null)">Fechar</ion-button>
+            <ion-button (click)="setOpenModal(false, null)">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>

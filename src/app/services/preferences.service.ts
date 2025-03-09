@@ -13,6 +13,26 @@ export class PreferencesService {
     private alertController: AlertController,
   ) { }
 
+  async init() {
+    const check = await Preferences.get({ key: 'init' });
+    if (!check.value) {
+      await this.set([
+        {
+          key: 'init',
+          value: 'true'
+        },
+        {
+          key: 'page_Arquivos',
+          value: 'true'
+        },
+        {
+          key: 'page_Pessoas',
+          value: 'true'
+        },
+      ]);
+    }
+  }
+
   async set(group: { key: string, value: string }[]) {
     try {
       for (let item of group) {

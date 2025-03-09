@@ -108,6 +108,30 @@ export class FilesService {
           ext: 'png',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+        },
+        {
+          id: 0,
+          title: 'Arquivo',
+          content: 'ababababaaljvhbaçdvhbaçvbabedvaebvovaobvoaṽbavbãdbvabstnhrtnsnrgnsmrtmyõabvuebovabve',
+          filePath: 'assets/image.png',
+          fileBase64: 'assets/image.png',
+          typeFile: 'image',
+          category: '',
+          ext: 'png',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: 0,
+          title: 'Arquivo',
+          content: 'ababababaaljvhbaçdvhbaçvbabedvaebvovaobvoaṽbavbãdbvabstnhrtnsnrgnsmrtmyõabvuebovabve',
+          filePath: '',
+          fileBase64: '',
+          typeFile: 'text',
+          category: '',
+          ext: 'png',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }
       ];
     }

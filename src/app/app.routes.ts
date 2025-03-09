@@ -19,7 +19,7 @@ export const routes: Routes = [
   },
   {
     path: 'services',
-    loadComponent: () => import('./services/services.page').then( m => m.ServicesPage)
+    loadComponent: () => import('./_services/services.page').then( m => m.ServicesPage)
   },
   {
     path: 'suppliers',

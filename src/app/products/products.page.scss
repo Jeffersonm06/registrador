@@ -1,0 +1,51 @@
+.product-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+
+  .form-section {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .info-grid,
+  .date-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+  }
+
+  ion-card {
+    padding: 0.5rem;
+    margin: 0;
+
+    ion-label {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium);
+    }
+
+    p {
+      margin: 0.3rem 0;
+      font-size: 1rem;
+    }
+  }
+
+  .action-buttons {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+}
+
+.required {
+  color: var(--ion-color-danger);
+  margin-left: 3px;
+}

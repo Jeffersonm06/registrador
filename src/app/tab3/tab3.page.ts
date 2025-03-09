@@ -7,7 +7,7 @@ import {
 } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { addCircle, close, person, camera } from 'ionicons/icons';
+import { addCircle, close, person, camera, film } from 'ionicons/icons';
 import { FilesystemService } from '../services/filesystem.service';
 import { OverlayEventDetail } from '@ionic/core';
 import { People } from '../interfaces/people';
@@ -106,7 +106,7 @@ export class Tab3Page implements OnInit {
     private toastCtrl: ToastController,
     private alertController: AlertController,
   ) {
-    addIcons({person,addCircle,camera,close});
+    addIcons({film,person,addCircle,camera,close});
   }
 
   async ngOnInit() {

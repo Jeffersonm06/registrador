@@ -33,11 +33,11 @@ export class DatabaseService {
       );
 
         CREATE TRIGGER IF NOT EXISTS update_files_timestamp
-        AFTER UPDATE ON files
-        FOR EACH ROW
-        BEGIN
-          UPDATE files SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-        END;
+          AFTER UPDATE ON files
+          FOR EACH ROW
+          BEGIN
+            UPDATE files SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+          END;
 
 
         CREATE TABLE IF NOT EXISTS peoples (
@@ -54,21 +54,41 @@ export class DatabaseService {
         );
 
         CREATE TRIGGER IF NOT EXISTS update_peoples_timestamp
-        AFTER UPDATE ON peoples
-        FOR EACH ROW
-        BEGIN
-          UPDATE peoples SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-        END;
+          AFTER UPDATE ON peoples
+          FOR EACH ROW
+          BEGIN
+            UPDATE peoples SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+          END;
+
+        CREATE TABLE products (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          category TEXT,
+          price REAL NOT NULL,
+          quantity INTEGER NOT NULL,
+          barcode TEXT UNIQUE,
+          supplier TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+
+        CREATE TRIGGER IF NOT EXISTS update_products_timestamp
+          AFTER UPDATE ON products
+          FOR EACH ROW
+          BEGIN
+            UPDATE products SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+          END;
 
       `;
 
       await this.db.execute(createTableQuery);
     } catch (error) {
-      this.ui.presentAlert({
+      /* this.ui.presentAlert({
         header: 'Banco de Dados',
         message: 'Erro ao inicializar o banco de dados: ' + error,
         buttons: ['ok']
-      });
+      }); */
     }
   }
 }
